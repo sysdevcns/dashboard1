@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Executivo - Dados Demonstrativos</title>
+<style>
+/* ===================== DESIGN TOKENS ===================== */
+/* ------------------------------------------------------------------------
+   PALETA DE CORES DO TEMA - edite somente aqui para ajustar cores globais.
+   :root                    = tema padrao (CLARO).
+   html[data-theme="dark"]  = sobrescreve as mesmas variaveis para o tema escuro.
+   Toda a UI (paineis, textos, graficos) le APENAS estas variaveis var(--x),
+   nunca cores fixas, entao mudar um valor aqui atualiza o dashboard inteiro.
+   ------------------------------------------------------------------------ */
+:root{
+  --bg:#eef1f6;
+  --bg-grad: radial-gradient(1200px 600px at 10% -10%, #dbe4ff 0%, transparent 60%), radial-gradient(1000px 700px at 110% 10%, #d9f3ea 0%, transparent 55%), #eef1f6;
+  --card: rgba(255,255,255,0.72);
+  --card-solid:#ffffff;
+  --panel: rgba(255,255,255,0.62);
+  --text:#14151f;
+  --text-secondary:#454a56;
+  --text-tertiary:#5b6170;
+  --border: rgba(20,22,35,0.10);
+  --border-strong: rgba(20,22,35,0.20);
+  --success:#0b7a4d;
+  --success-bg: rgba(11,122,77,0.12);
+  --warning:#8f5f09;
+  --warning-bg: rgba(143,95,9,0.12);
+  --danger:#c53535;
+  --danger-bg: rgba(197,53,53,0.12);
+  --neutral:#565c68;
+  --neutral-bg: rgba(86,92,104,0.12);
+  --primary:#3153f2;
+  --primary-2:#6d4ff0;
+  --primary-bg: rgba(49,83,242,0.10);
+  --shadow-sm: 0 1px 2px rgba(20,22,35,0.06);
+  --shadow-md: 0 10px 30px rgba(20,22,35,0.10);
+  --shadow-lg: 0 24px 60px rgba(20,22,35,0.16);
+  --blur: 20px;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --focus: 0 0 0 3px rgba(49,83,242,0.45);
+  color-scheme: light;
+}
+html[data-theme="dark"]{
+  --bg:#0a0b10;
+  --bg-grad: radial-gradient(1200px 600px at 10% -10%, rgba(64,90,220,0.20) 0%, transparent 60%), radial-gradient(1000px 700px at 110% 10%, rgba(30,150,120,0.16) 0%, transparent 55%), #0a0b10;
+  --card: rgba(255,255,255,0.065);
+  --card-solid:#15171f;
+  --panel: rgba(255,255,255,0.05);
+  --text:#f2f3f8;
+  --text-secondary:#b7bccb;
+  --text-tertiary:#8b90a0;
+  --border: rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.20);
+  --success:#4fe0a4;
+  --success-bg: rgba(79,224,164,0.15);
+  --warning:#f6c169;
+  --warning-bg: rgba(246,193,105,0.15);
+  --danger:#ff7f7f;
+  --danger-bg: rgba(255,127,127,0.15);
+  --neutral:#a7acba;
+  --neutral-bg: rgba(167,172,186,0.15);
+  --primary:#8aa0ff;
+  --primary-2:#bba7ff;
+  --primary-bg: rgba(138,160,255,0.16);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 10px 30px rgba(0,0,0,0.45);
+  --shadow-lg: 0 24px 70px rgba(0,0,0,0.55);
+  --focus: 0 0 0 3px rgba(138,160,255,0.55);
+  color-scheme: dark;
+}
+/* ===================== RESET / BASE ===================== */
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;overflow-y:auto;overflow-x:hidden}
+body{
+  margin:0;
+  background:var(--bg-grad);
+  color:var(--text);
+  font-family:"Segoe UI Variable","Segoe UI",-apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  transition:background .35s ease,color .35s ease;
+  line-height:1.45;
+}
+::selection{background:var(--primary);color:#fff}
+:focus-visible{outline:none;box-shadow:var(--focus);border-radius:8px}
+a{color:var(--primary)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.app{max-width:1400px;margin:0 auto;padding:18px 22px 60px}
+
+/* ===================== GLASS SURFACE ===================== */
+.glass{
+  background:var(--card);
+  backdrop-filter:blur(var(--blur)) saturate(150%);
+  -webkit-backdrop-filter:blur(var(--blur)) saturate(150%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .glass{background:var(--card-solid)}
+}
+@media (forced-colors: active){
+  .glass{background:Canvas;border:1px solid CanvasText}
+  .chip{forced-color-adjust:none}
+}
+
+/* ===================== HEADER ===================== */
+.header{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:14px 20px;margin-bottom:14px;position:sticky;top:12px;z-index:40;
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-icon{width:38px;height:38px;flex:none;border-radius:11px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md)}
+.brand-icon svg{width:20px;height:20px;stroke:#fff}
+.brand h1{font-size:16px;font-weight:650;margin:0;letter-spacing:.1px;color:var(--text)}
+.brand p{font-size:11.5px;margin:1px 0 0;color:var(--text-tertiary)}
+.header-center{flex:1;display:flex;justify-content:center;max-width:420px;margin:0 24px}
+.search-wrap{position:relative;width:100%}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--text-tertiary);pointer-events:none}
+.search-wrap input{
+  width:100%;padding:9px 12px 9px 34px;border-radius:999px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);font-size:12.5px;transition:box-shadow .2s,border-color .2s;
+}
+.search-wrap input::placeholder{color:var(--text-tertiary)}
+.search-wrap input:focus-visible{border-color:var(--primary);box-shadow:var(--focus)}
+.header-right{display:flex;align-items:center;gap:10px;flex:none}
+.last-update{font-size:11px;color:var(--text-tertiary);white-space:nowrap}
+.icon-btn{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--panel);
+  color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .15s ease,background .15s ease,border-color .15s;
+}
+.icon-btn:hover{background:var(--primary-bg);border-color:var(--primary);transform:translateY(-1px)}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor}
+
+/* ===================== TICKER ===================== */
+.ticker{overflow:hidden;white-space:nowrap;margin-bottom:14px;padding:9px 0;position:relative}
+.ticker::before,.ticker::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.ticker::before{left:0;background:linear-gradient(90deg,var(--bg) 10%,transparent)}
+.ticker::after{right:0;background:linear-gradient(270deg,var(--bg) 10%,transparent)}
+.ticker-track{display:inline-block;animation:tickerMove 46s linear infinite}
+.ticker-track:hover,.ticker-track:focus-within{animation-play-state:paused}
+@keyframes tickerMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.t-item{display:inline-flex;align-items:center;gap:6px;padding:0 20px;font-size:12px;color:var(--text-secondary);border-right:1px solid var(--border)}
+.t-item b{color:var(--text);font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:3px;font-weight:700;padding:1px 7px;border-radius:999px;font-size:11px}
+.chip.up{color:var(--success);background:var(--success-bg)}
+.chip.dn{color:var(--danger);background:var(--danger-bg)}
+.chip svg{width:10px;height:10px}
+
+/* ===================== TOOLBAR / FILTERS ===================== */
+.toolbar{position:relative;z-index:50;display:flex;flex-wrap:wrap;align-items:end;gap:14px;padding:14px 18px;margin-bottom:16px}
+.filter-group{position:relative;display:flex;flex-direction:column;gap:5px;min-width:170px}
+.filter-group label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700}
+/* ---- Combo: botao + painel com busca, substitui o <select> nativo para permitir
+   pesquisa dentro da lista (Empresa, Projeto, Mes de referencia). ---- */
+.combo{position:relative}
+.combo-btn{
+  width:100%;text-align:left;padding:8px 30px 8px 11px;border-radius:10px;border:1px solid var(--border);
+  background:var(--panel) url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%235b6170%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E) no-repeat right 9px center/13px;
+  color:var(--text);font-size:12.5px;font-family:inherit;cursor:pointer;transition:border-color .2s;min-height:36px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.combo-btn:hover{border-color:var(--border-strong)}
+.combo-btn:focus-visible{border-color:var(--primary);box-shadow:var(--focus)}
+.combo.open .combo-btn{border-color:var(--primary)}
+.combo-panel{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;min-width:220px;
+  background:var(--card-solid);border:1px solid var(--border-strong);border-radius:12px;
+  box-shadow:var(--shadow-lg);padding:8px;
+}
+.combo-search{
+  width:100%;box-sizing:border-box;padding:7px 10px;border-radius:8px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);font-size:12.5px;margin-bottom:6px;font-family:inherit;
+}
+.combo-search::placeholder{color:var(--text-tertiary)}
+.combo-search:focus-visible{border-color:var(--primary);box-shadow:var(--focus)}
+.combo-list{list-style:none;margin:0;padding:0;max-height:220px;overflow-y:auto}
+.combo-option{
+  width:100%;text-align:left;padding:7px 9px;border-radius:7px;border:none;background:transparent;
+  color:var(--text);font-size:12.5px;cursor:pointer;display:block;font-family:inherit;
+}
+.combo-option:hover,.combo-option.active{background:var(--primary-bg);color:var(--primary)}
+.combo-option[aria-selected="true"]{font-weight:700}
+.combo-empty{padding:10px 9px;font-size:12px;color:var(--text-tertiary);text-align:center}
+.toolbar .spacer{flex:1}
+.btn{padding:9px 16px;border-radius:10px;font-size:12.5px;font-weight:650;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:transform .15s,filter .15s;min-height:36px}
+.btn svg{width:14px;height:14px;flex:none}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;box-shadow:0 8px 20px rgba(49,83,242,0.28)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{background:var(--panel);border-color:var(--border);color:var(--text-secondary)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border-strong)}
+
+/* ===================== KPI CARDS ===================== */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi-card{position:relative;padding:16px 18px;overflow:hidden;cursor:default;min-width:0}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between}
+.kpi-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.kpi-icon svg{width:17px;height:17px}
+.kpi-icon.blue{background:var(--primary-bg);color:var(--primary)}
+.kpi-icon.green{background:var(--success-bg);color:var(--success)}
+.kpi-icon.red{background:var(--danger-bg);color:var(--danger)}
+.kpi-icon.purple{background:rgba(109,79,240,0.16);color:var(--primary-2)}
+.kpi-label{font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:12px}
+.kpi-value{color:var(--text);font-size:clamp(16px,3vw,23px);font-weight:750;margin-top:4px;letter-spacing:-.2px;word-break:break-word}
+.kpi-sub{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:11.5px;color:var(--text-tertiary)}
+.kpi-spark{position:absolute;right:14px;bottom:14px;width:84px;height:30px;opacity:.9}
+.kpi-card:hover{box-shadow:var(--shadow-md)}
+.kpi-card::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(160deg,rgba(255,255,255,0.10),transparent 40%);pointer-events:none}
+
+/* ===================== CHARTS ===================== */
+.charts-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:14px;margin-bottom:16px;align-items:stretch}
+.panel{padding:18px;min-width:0}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+.panel-head h2{font-size:13px;margin:0;font-weight:700;color:var(--text)}
+.panel-head span{font-size:11px;color:var(--text-tertiary)}
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.donut-center-label{font-size:20px;font-weight:750;fill:var(--text)}
+.donut-center-sub{font-size:8.5px;fill:var(--text-tertiary);letter-spacing:.08em}
+.legend{display:flex;flex-direction:column;gap:9px;font-size:12px;flex:1;min-width:140px}
+.legend-row{display:flex;align-items:center;gap:8px;cursor:default}
+.legend-dot{width:9px;height:9px;border-radius:3px;flex:none}
+.legend-name{flex:1;color:var(--text-secondary)}
+.legend-val{font-weight:700;color:var(--text)}
+.bars-wrap{width:100%;overflow-x:auto}
+.bars-inner{min-width:640px}
+.legend-inline{display:flex;gap:16px;font-size:11.5px;color:var(--text-secondary);margin-bottom:8px;flex-wrap:wrap}
+.legend-inline span{display:inline-flex;align-items:center;gap:6px}
+.legend-inline i{width:9px;height:9px;border-radius:2px;display:inline-block}
+svg.chart{width:100%;height:auto;display:block}
+.bar-rect{transition:opacity .15s;cursor:default}
+.bar-rect:hover{opacity:.78}
+.donut-seg{cursor:default}
+
+/* ===================== TABLE ===================== */
+.table-panel{padding:18px;margin-bottom:16px}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.table-toolbar h2{color:var(--text);font-size:13px;margin:0;font-weight:700}
+.table-toolbar span{font-size:11.5px;color:var(--text-tertiary)}
+.table-scroll{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:660px}
+thead th{
+  position:sticky;top:0;z-index:5;background:var(--card-solid);
+  text-align:left;padding:11px 12px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--text-tertiary);font-weight:700;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;
+}
+thead th:hover,thead th:focus-visible{color:var(--text)}
+thead th .sort-ind{opacity:.35;margin-left:4px;font-size:9px;display:inline-block}
+thead th.sorted{color:var(--primary)}
+thead th.sorted .sort-ind{opacity:1}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+tbody tr{transition:background .12s}
+tbody tr:hover td,tbody tr:focus-within td{background:var(--panel)}
+tbody tr:last-child td{border-bottom:none}
+.proj-name{font-weight:650}
+.proj-emp{display:block;font-size:10.5px;color:var(--text-tertiary);font-weight:400;margin-top:1px}
+.cell-num{font-family:inherit}
+.cell-up{color:var(--success);font-weight:600}
+.cell-dn{color:var(--danger);font-weight:600}
+.empty-row td{padding:34px 12px;text-align:center;color:var(--text-tertiary);font-size:12.5px}
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px;font-size:12px;color:var(--text-secondary)}
+.pg-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pg-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.pg-btn:disabled{opacity:.4;cursor:not-allowed}
+.pg-btn svg{width:14px;height:14px}
+
+/* ===================== FOOTER / LIVE REGION ===================== */
+.footer{text-align:center;padding:22px 0 4px;font-size:11px;color:var(--text-tertiary)}
+.sr-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ===================== TOOLTIP ===================== */
+.tooltip{
+  position:fixed;z-index:200;pointer-events:none;min-width:170px;max-width:260px;
+  background:var(--card-solid);border:1px solid var(--border-strong);border-radius:12px;
+  box-shadow:var(--shadow-lg);padding:12px 14px;font-size:11.5px;color:var(--text);
+  opacity:0;transform:translateY(4px) scale(.98);transition:opacity .12s ease,transform .12s ease;
+}
+.tooltip.show{opacity:1;transform:translateY(0) scale(1)}
+.tooltip h3{margin:0 0 6px;font-size:12px;font-weight:700;color:var(--text)}
+.tooltip .tt-row{display:flex;justify-content:space-between;gap:14px;padding:2px 0;color:var(--text-secondary)}
+.tooltip .tt-row b{color:var(--text);font-weight:700}
+.tooltip .tt-spark{margin-top:6px}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width:1100px){
+  .charts-grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:720px){
+  :root{--blur:8px}
+  .header{flex-wrap:wrap;position:static;padding:12px 16px}
+  .header-center{order:3;max-width:100%;margin:8px 0 0;width:100%}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi-spark{display:none}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .filter-group{width:100%}
+  .toolbar .spacer{display:none}
+  .toolbar .btn{width:100%}
+  .app{padding:12px}
+  .panel{padding:14px}
+  .table-panel{padding:14px}
+}
+@media (max-width:420px){
+  .kpis{grid-template-columns:1fr}
+}
+
+/* ---- Compacto por ALTURA da tela: o visual "HTML Content" do Power BI tem uma
+   caixa de tamanho fixo; se o conteudo for mais alto que essa caixa, ele e cortado
+   (o visual nao redimensiona sozinho). Estas regras reduzem paddings/gaps quando a
+   altura disponivel e curta, para que o painel inteiro caiba sem cortar graficos
+   ou a tabela. Como ultimo recurso, html,body permitem rolagem (ver RESET/BASE). ---- */
+@media (max-height:820px){
+  .app{padding:10px 16px 20px}
+  .header{padding:10px 16px;margin-bottom:10px;top:8px}
+  .ticker{margin-bottom:10px;padding:7px 0}
+  .toolbar{padding:10px 14px;margin-bottom:10px}
+  .kpis{gap:10px;margin-bottom:10px}
+  .kpi-card{padding:12px 14px}
+  .kpi-label{margin-top:8px}
+  .kpi-spark{height:22px;bottom:10px}
+  .charts-grid{gap:10px;margin-bottom:10px}
+  .panel{padding:12px}
+  .panel-head{margin-bottom:8px}
+  .table-panel{padding:12px;margin-bottom:10px}
+  .footer{padding:12px 0 2px}
+}
+@media (max-height:640px){
+  .header{position:static}
+  .kpi-spark{display:none}
+  .donut-wrap{gap:10px}
+  thead th{padding:8px 10px}
+  tbody td{padding:8px 10px}
+  .pagination{margin-top:8px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+
+<a class="visually-hidden" href="#mainContent">Pular para o conteúdo principal</a>
+<div class="app">
+  <header class="header glass">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></div>
+      <div>
+        <h1>Painel Executivo</h1>
+        <p class="subtitle">Indicadores Demonstrativos &middot; Ambiente de Exemplo</p>
+      </div>
+    </div>
+    <div class="header-center" role="search">
+      <div class="search-wrap">
+        <label for="globalSearch" class="visually-hidden">Buscar projeto ou empresa</label>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="globalSearch" type="text" placeholder="Buscar projeto ou empresa&hellip;" autocomplete="off">
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="last-update" id="lastUpdate">&mdash;</span>
+      <button type="button" class="icon-btn" id="themeToggle" aria-label="Alternar tema (claro)" data-tooltip-generic="1" data-tt-title="Tema" data-tt-text="Clique para alternar entre claro e escuro"></button>
+    </div>
+  </header>
+
+  <div class="ticker glass" aria-label="Maiores desvios demonstrativos" role="region">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <form class="toolbar glass" id="filterForm" aria-label="Filtros do painel" onsubmit="return false">
+    <div class="filter-group">
+      <label id="fEmpresaLbl" for="fEmpresaBtn">Empresa</label>
+      <div class="combo" data-combo="empresa">
+        <button type="button" class="combo-btn" id="fEmpresaBtn" aria-haspopup="listbox" aria-expanded="false">Todas as empresas</button>
+        <div class="combo-panel" id="fEmpresaPanel" hidden>
+          <input type="text" class="combo-search" id="fEmpresaSearch" placeholder="Buscar empresa&hellip;" autocomplete="off" aria-label="Buscar empresa">
+          <ul class="combo-list" role="listbox" id="fEmpresaList" aria-labelledby="fEmpresaLbl"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label id="fProjetoLbl" for="fProjetoBtn">Projeto</label>
+      <div class="combo" data-combo="projeto">
+        <button type="button" class="combo-btn" id="fProjetoBtn" aria-haspopup="listbox" aria-expanded="false">Todos os projetos</button>
+        <div class="combo-panel" id="fProjetoPanel" hidden>
+          <input type="text" class="combo-search" id="fProjetoSearch" placeholder="Buscar projeto&hellip;" autocomplete="off" aria-label="Buscar projeto">
+          <ul class="combo-list" role="listbox" id="fProjetoList" aria-labelledby="fProjetoLbl"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label id="fMesLbl" for="fMesBtn">M&ecirc;s de refer&ecirc;ncia</label>
+      <div class="combo" data-combo="mes">
+        <button type="button" class="combo-btn" id="fMesBtn" aria-haspopup="listbox" aria-expanded="false">Todos os meses</button>
+        <div class="combo-panel" id="fMesPanel" hidden>
+          <input type="text" class="combo-search" id="fMesSearch" placeholder="Buscar m&ecirc;s&hellip;" autocomplete="off" aria-label="Buscar m&ecirc;s">
+          <ul class="combo-list" role="listbox" id="fMesList" aria-labelledby="fMesLbl"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button type="button" class="btn btn-ghost" id="btnReset">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      Limpar filtros
+    </button>
+    <button type="button" class="btn btn-primary" id="btnExport">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
+      Exportar CSV
+    </button>
+  </form>
+
+  <p class="sr-live" id="liveRegion" role="status" aria-live="polite"></p>
+
+  <main id="mainContent">
+    <h2 class="visually-hidden">Indicadores</h2>
+    <section class="kpis" id="kpiGrid" aria-label="Indicadores-chave"></section>
+
+    <h2 class="visually-hidden">Gráficos</h2>
+    <section class="charts-grid">
+      <div class="panel glass" aria-label="Status de validação dos projetos">
+        <div class="panel-head"><h2>Status de Processamento</h2><span id="donutTotal"></span></div>
+        <div class="donut-wrap">
+          <svg class="chart" id="donutSvg" viewBox="0 0 140 140" role="img" aria-label="Gráfico de rosca com a distribuição de status dos projetos" style="width:140px;height:140px;flex:none"></svg>
+          <div class="legend" id="donutLegend"></div>
+        </div>
+      </div>
+      <div class="panel glass" aria-label="Fluxo de caixa mensal">
+        <div class="panel-head"><h2>Fluxo de Caixa Mensal</h2><span>Realizado &times; Projetado (R$)</span></div>
+        <div class="legend-inline">
+          <span><i style="background:var(--primary)" aria-hidden="true"></i>Realizado</span>
+          <span><i style="background:var(--primary-2)" aria-hidden="true"></i>Projetado</span>
+          <span><i style="background:var(--warning);border-radius:50%;width:6px;height:6px" aria-hidden="true"></i>Tend&ecirc;ncia</span>
+        </div>
+        <div class="bars-wrap">
+          <div class="bars-inner">
+            <svg class="chart" id="barsSvg" viewBox="0 0 900 220" role="img" aria-label="Gráfico de barras do fluxo de caixa mensal, realizado e projetado"></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <h2 class="visually-hidden">Detalhamento por projeto</h2>
+    <section class="table-panel glass" aria-label="Tabela de projetos">
+      <div class="table-toolbar">
+        <h2>Detalhamento por Projeto</h2>
+        <span id="tableCount"></span>
+      </div>
+      <div class="table-scroll">
+        <table id="dataTable">
+          <caption class="visually-hidden">Lista de projetos filtrados com saldo realizado, saldo de planejado, delta e margem líquida. Clique em um cabeçalho de coluna para ordenar.</caption>
+          <thead>
+            <tr>
+              <th scope="col" data-key="p" tabindex="0" role="button" aria-sort="none">Projeto<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+              <th scope="col" data-key="e" tabindex="0" role="button" aria-sort="none">Empresa<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+              <th scope="col" data-key="si" tabindex="0" role="button" aria-sort="none">Saldo Realizado<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+              <th scope="col" data-key="sv" tabindex="0" role="button" aria-sort="none">Saldo Planejado<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+              <th scope="col" data-key="dl" tabindex="0" role="button" aria-sort="descending">Delta<span class="sort-ind" aria-hidden="true">&#9660;</span></th>
+              <th scope="col" data-key="ml" tabindex="0" role="button" aria-sort="none">Margem L&iacute;quida<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span id="pagInfo"></span>
+        <button type="button" class="pg-btn" id="btnPrev" aria-label="P&aacute;gina anterior"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button type="button" class="pg-btn" id="btnNext" aria-label="Pr&oacute;xima p&aacute;gina"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Empresa Exemplo &middot; Área de Dados &middot; Painel demonstrativo com dados fictícios</footer>
+</div>
+<div class="tooltip" id="tooltip" role="tooltip" aria-hidden="true"></div>
+
+<script>
+
+(function(){
+"use strict";
+
+/* ==========================================================================
+   INDICE DO SCRIPT - cada secao abaixo e um modulo independente (IIFE).
+   Para alterar algo especifico, va direto na secao correspondente:
+
+   1. DATA      - arrays PRJ / RAN / TKR com os dados do modelo Power BI.
+   2. UTILS     - funcoes puras de formatacao (numero, moeda, data, texto).
+   3. THEME     - troca entre tema claro/escuro (cores ficam no CSS, em :root
+                  e html[data-theme="dark"]; aqui so trocamos o atributo).
+   4. TOOLTIP   - balao flutuante usado por KPIs, ticker, grafico e tabela.
+   5. COMBO     - combobox pesquisavel (botao + busca) usado pelos filtros.
+   6. FILTERS   - estado dos filtros (busca, empresa, projeto, mes) + ordenacao.
+   7. CHARTS    - donut de status e grafico de barras (fluxo de caixa).
+   8. TABLE     - montagem das linhas da tabela e paginacao.
+   9. KPIS      - os 4 cartoes de indicadores no topo do painel.
+   10. TICKER   - faixa de destaques (maiores desvios) no topo.
+   11. EXPORT   - exportacao da tabela filtrada para CSV.
+   12. MAIN     - inicializa tudo e liga os eventos (ponto de entrada).
+   ========================================================================== */
+
+/* ============================== DATA ================================ */
+var PRJ = [{"p": "301 - JARDIM AURORA - PROJETO DEMO - RJ", "e": "102 - Beta Participações Imobiliárias Ltda - RJ", "si": -11643114, "sv": 58764611, "dl": -73793499, "ml": -0.0276, "st": "VALIDADO"}, {"p": "302 - VISTA CENTRAL - PROJETO DEMO - RJ", "e": "102 - Beta Participações Imobiliárias Ltda - RJ", "si": 58197857, "sv": 14834366, "dl": 45270311, "ml": 0.061, "st": "VALIDADO"}, {"p": "303 - PARQUE LINEAR - PROJETO DEMO - MG", "e": "104 - Delta Empreendimentos Ltda - MG", "si": 16227216, "sv": 42913819, "dl": -24586405, "ml": -0.1367, "st": "VALIDADO"}, {"p": "304 - RESERVA NORTE - PROJETO DEMO - BA", "e": "107 - Omega Construções SPE Ltda - BA", "si": 14587039, "sv": 39145908, "dl": -22672632, "ml": -0.0109, "st": "PENDENTE"}, {"p": "305 - VILA SERENA - PROJETO DEMO - SP", "e": "103 - Gama Incorporações Ltda - SP", "si": 41722344, "sv": 31833825, "dl": 6550426, "ml": -0.0723, "st": "EM ANÁLISE"}, {"p": "306 - HORIZONTE SUL - PROJETO DEMO - SC", "e": "106 - Zeta Residencial Ltda - SC", "si": -1281569, "sv": 15224068, "dl": -18131515, "ml": -0.1016, "st": "PENDENTE"}, {"p": "307 - PORTAL DAS ÁGUAS - PROJETO DEMO - PR", "e": "105 - Épsilon Urbanismo SPE Ltda - PR", "si": -9168181, "sv": 57971471, "dl": -67431782, "ml": 0.1181, "st": "EM ANÁLISE"}, {"p": "308 - ESTAÇÃO PRIME - PROJETO DEMO - BA", "e": "107 - Omega Construções SPE Ltda - BA", "si": -4423617, "sv": 46046819, "dl": -53551721, "ml": 0.2647, "st": "VALIDADO"}, {"p": "309 - BOSQUE URBANO - PROJETO DEMO - SC", "e": "106 - Zeta Residencial Ltda - SC", "si": 62490893, "sv": 21904268, "dl": 44407378, "ml": -0.1152, "st": "VALIDADO"}, {"p": "310 - LUME RESIDENCE - PROJETO DEMO - PR", "e": "105 - Épsilon Urbanismo SPE Ltda - PR", "si": -4290503, "sv": 24622331, "dl": -22375651, "ml": -0.0995, "st": "VALIDADO"}, {"p": "311 - SOLAR ATLÂNTICO - PROJETO DEMO - SC", "e": "106 - Zeta Residencial Ltda - SC", "si": 6831063, "sv": 33842424, "dl": -29050908, "ml": -0.0452, "st": "VALIDADO"}, {"p": "312 - MIRANTE VERDE - PROJETO DEMO - RJ", "e": "102 - Beta Participações Imobiliárias Ltda - RJ", "si": 7969840, "sv": 44845520, "dl": -32642963, "ml": -0.0276, "st": "VALIDADO"}, {"p": "313 - CIDADE NOVA - PROJETO DEMO - PR", "e": "105 - Épsilon Urbanismo SPE Ltda - PR", "si": 59752529, "sv": 23738124, "dl": 39500326, "ml": 0.0121, "st": "PENDENTE"}, {"p": "314 - PRAÇA ALTA - PROJETO DEMO - SP", "e": "101 - Alfa Desenvolvimento SPE Ltda - SP", "si": 15742311, "sv": 11154210, "dl": 10094528, "ml": 0.0077, "st": "VALIDADO"}, {"p": "315 - ESSENZA PARQUE - PROJETO DEMO - MG", "e": "104 - Delta Empreendimentos Ltda - MG", "si": 61125617, "sv": 57178411, "dl": 1226624, "ml": -0.0437, "st": "VALIDADO"}, {"p": "316 - NEXO TOWERS - PROJETO DEMO - PE", "e": "108 - Sigma Properties Ltda - PE", "si": 4175900, "sv": 26775807, "dl": -28257299, "ml": -0.0267, "st": "VALIDADO"}, {"p": "317 - ALAMEDA RIO - PROJETO DEMO - PR", "e": "105 - Épsilon Urbanismo SPE Ltda - PR", "si": 63461803, "sv": 37751707, "dl": 32773064, "ml": 0.1418, "st": "VALIDADO"}, {"p": "318 - PÁTIO SUL - PROJETO DEMO - SP", "e": "103 - Gama Incorporações Ltda - SP", "si": 53387461, "sv": 42119287, "dl": 4793380, "ml": 0.2279, "st": "PENDENTE"}, {"p": "319 - RAÍZES CENTRO - PROJETO DEMO - SP", "e": "103 - Gama Incorporações Ltda - SP", "si": 6472420, "sv": 54666321, "dl": -49111233, "ml": 0.1482, "st": "VALIDADO"}, {"p": "320 - VERSA JARDIM - PROJETO DEMO - PE", "e": "108 - Sigma Properties Ltda - PE", "si": 56016525, "sv": 25872115, "dl": 31426000, "ml": 0.2804, "st": "VALIDADO"}, {"p": "321 - NATIVA CLUB - PROJETO DEMO - RJ", "e": "102 - Beta Participações Imobiliárias Ltda - RJ", "si": 57070937, "sv": 59390556, "dl": -5843036, "ml": 0.2343, "st": "VALIDADO"}, {"p": "322 - CAMPO BELO - PROJETO DEMO - PR", "e": "105 - Épsilon Urbanismo SPE Ltda - PR", "si": 43353204, "sv": 19613787, "dl": 23351637, "ml": -0.1484, "st": "VALIDADO"}, {"p": "323 - URBAN LIFE - PROJETO DEMO - PR", "e": "105 - Épsilon Urbanismo SPE Ltda - PR", "si": 52187530, "sv": 60134417, "dl": -12949606, "ml": 0.1038, "st": "VALIDADO"}, {"p": "324 - COSTA AZUL - PROJETO DEMO - PR", "e": "105 - Épsilon Urbanismo SPE Ltda - PR", "si": 53137358, "sv": 49867299, "dl": -1392767, "ml": -0.0736, "st": "PENDENTE"}, {"p": "325 - NOVA ESTAÇÃO - PROJETO DEMO - SP", "e": "101 - Alfa Desenvolvimento SPE Ltda - SP", "si": 28507489, "sv": 41789774, "dl": -20955520, "ml": -0.0941, "st": "VALIDADO"}, {"p": "326 - VIVA HORIZONTE - PROJETO DEMO - PR", "e": "105 - Épsilon Urbanismo SPE Ltda - PR", "si": 17138745, "sv": 12887292, "dl": 292607, "ml": 0.289, "st": "EM ANÁLISE"}, {"p": "327 - LÍRIO BRANCO - PROJETO DEMO - RJ", "e": "102 - Beta Participações Imobiliárias Ltda - RJ", "si": 50228535, "sv": 13644773, "dl": 41344548, "ml": 0.1164, "st": "VALIDADO"}, {"p": "328 - JARDINS DO VALE - PROJETO DEMO - PE", "e": "108 - Sigma Properties Ltda - PE", "si": 58793389, "sv": 20081482, "dl": 35158819, "ml": 0.1138, "st": "VALIDADO"}, {"p": "329 - VISTA LAGO - PROJETO DEMO - MG", "e": "104 - Delta Empreendimentos Ltda - MG", "si": 57383095, "sv": 59684989, "dl": 1944317, "ml": 0.1949, "st": "VALIDADO"}, {"p": "330 - ALTO SERENA - PROJETO DEMO - BA", "e": "107 - Omega Construções SPE Ltda - BA", "si": 35119651, "sv": 38400398, "dl": 3812272, "ml": 0.1088, "st": "VALIDADO"}];
+var RAN = [{"d": "01/01/2025", "real": 35316732, "proj": 0}, {"d": "01/02/2025", "real": -7813179, "proj": 0}, {"d": "01/03/2025", "real": 65754153, "proj": 0}, {"d": "01/04/2025", "real": -19353659, "proj": 0}, {"d": "01/05/2025", "real": 123692176, "proj": 0}, {"d": "01/06/2025", "real": 36770953, "proj": 0}, {"d": "01/07/2025", "real": 34114155, "proj": 0}, {"d": "01/08/2025", "real": -23069723, "proj": 0}, {"d": "01/09/2025", "real": -5942939, "proj": 0}, {"d": "01/10/2025", "real": -9196194, "proj": 0}, {"d": "01/11/2025", "real": 36456093, "proj": 0}, {"d": "01/12/2025", "real": -6907364, "proj": 0}, {"d": "01/01/2026", "real": -16567649, "proj": 0}, {"d": "01/02/2026", "real": 63698723, "proj": 0}, {"d": "01/03/2026", "real": -5979375, "proj": 0}, {"d": "01/04/2026", "real": 113017733, "proj": 0}, {"d": "01/05/2026", "real": 0, "proj": -16111118}, {"d": "01/06/2026", "real": 0, "proj": -5246829}, {"d": "01/07/2026", "real": 0, "proj": 99577354}];
+var TKR = [{"p": "301 - JARDIM AURORA - PROJETO DEMO - RJ", "dl": -73793499}, {"p": "307 - PORTAL DAS ÁGUAS - PROJETO DEMO - PR", "dl": -67431782}, {"p": "308 - ESTAÇÃO PRIME - PROJETO DEMO - BA", "dl": -53551721}, {"p": "319 - RAÍZES CENTRO - PROJETO DEMO - SP", "dl": -49111233}, {"p": "302 - VISTA CENTRAL - PROJETO DEMO - RJ", "dl": 45270311}, {"p": "309 - BOSQUE URBANO - PROJETO DEMO - SC", "dl": 44407378}, {"p": "327 - LÍRIO BRANCO - PROJETO DEMO - RJ", "dl": 41344548}, {"p": "313 - CIDADE NOVA - PROJETO DEMO - PR", "dl": 39500326}, {"p": "328 - JARDINS DO VALE - PROJETO DEMO - PE", "dl": 35158819}, {"p": "317 - ALAMEDA RIO - PROJETO DEMO - PR", "dl": 32773064}, {"p": "312 - MIRANTE VERDE - PROJETO DEMO - RJ", "dl": -32642963}, {"p": "320 - VERSA JARDIM - PROJETO DEMO - PE", "dl": 31426000}];
+
+/* ============================== UTILS ================================ */
+var Utils = (function(){
+  function s(v){ return (v===null||v===undefined) ? "" : String(v); }
+  function n(v){ var x = parseFloat(v); return isNaN(x) ? 0 : x; }
+  function norm(v){ return s(v).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+  function percValue(v){ var x = n(v); return Math.abs(x) < 1 ? x*100 : x; }
+  function parseYM(d){ var p = s(d).split("/"); return p.length===3 ? (p[2]+"-"+p[1]) : ""; }
+  function monthLabel(ym){
+    var meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+    var parts = ym.split("-");
+    if(parts.length!==2) return ym;
+    var idx = parseInt(parts[1],10)-1;
+    return (meses[idx]||parts[1])+"/"+parts[0].slice(2);
+  }
+  function fmtBRL(v){
+    var x = n(v); var neg = x<0; x = Math.abs(x);
+    var t = Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");
+    return (neg?"\u2212":"")+"R$ "+t;
+  }
+  function fmtBRLk(v){
+    var x = n(v); var abs = Math.abs(x);
+    if(abs>=1000000) return (x/1000000).toFixed(1).replace(".",",")+"M";
+    if(abs>=1000) return (x/1000).toFixed(0)+"k";
+    return Math.round(x).toString();
+  }
+  function fmtPct(v){ return percValue(v).toFixed(1).replace(".",",")+"%"; }
+  function escapeHtml(v){
+    var APOS = String.fromCharCode(39);
+    var map = {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"};
+    map[APOS] = "&#39;";
+    var re = new RegExp("[&<>\"" + APOS + "]", "g");
+    return s(v).replace(re, function(c){ return map[c]; });
+  }
+  function debounce(fn, wait){
+    var t;
+    return function(){
+      var ctx=this, args=arguments;
+      clearTimeout(t);
+      t = setTimeout(function(){ fn.apply(ctx,args); }, wait);
+    };
+  }
+  return {s:s,n:n,norm:norm,percValue:percValue,parseYM:parseYM,monthLabel:monthLabel,
+          fmtBRL:fmtBRL,fmtBRLk:fmtBRLk,fmtPct:fmtPct,escapeHtml:escapeHtml,debounce:debounce};
+})();
+
+/* ============================== THEME ================================ */
+/* Tema padrao = CLARO (light). O usuario pode alternar para ESCURO (dark)
+   pelo botao no cabecalho; a preferencia so muda enquanto a pagina estiver
+   aberta (nao ha "modo automatico" - evita depender de prefers-color-scheme,
+   que se comporta de forma inconsistente dentro do WebView do Power BI). */
+var Theme = (function(){
+  var ORDER = ["light","dark"];
+  var LABELS = {light:"claro", dark:"escuro"};
+  var ICONS = {
+    light: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/></svg>",
+    dark: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z\"/></svg>"
+  };
+  var current = "light";
+  function apply(t){
+    current = t;
+    document.documentElement.setAttribute("data-theme", t);
+    var btn = document.getElementById("themeToggle");
+    if(btn){
+      btn.innerHTML = ICONS[t];
+      btn.setAttribute("aria-label", "Alternar tema (" + LABELS[t] + ")");
+    }
+  }
+  function toggle(){
+    var idx = ORDER.indexOf(current);
+    apply(ORDER[(idx+1)%ORDER.length]);
+    Charts.refreshTheme();
+  }
+  function init(){ apply("light"); }
+  return {init:init, toggle:toggle, current:function(){return current;}};
+})();
+
+/* ============================== TOOLTIP =============================== */
+var Tooltip = (function(){
+  var el;
+  function ensure(){ if(!el) el = document.getElementById("tooltip"); return el; }
+  function position(x,y){
+    var t = ensure();
+    var pad = 14;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var w = t.offsetWidth, h = t.offsetHeight;
+    var left = x + 16, top = y + 16;
+    if(left + w + pad > vw) left = x - w - 16;
+    if(top + h + pad > vh) top = y - h - 16;
+    if(left < pad) left = pad;
+    if(top < pad) top = pad;
+    t.style.left = left + "px";
+    t.style.top = top + "px";
+  }
+  function show(x, y, html){
+    var t = ensure();
+    t.innerHTML = html;
+    t.classList.add("show");
+    position(x,y);
+  }
+  function hide(){ var t = ensure(); t.classList.remove("show"); }
+  function sparkSvg(values, color){
+    if(!values.length) return "";
+    var w=180,h=34,max=Math.max.apply(null,values.concat([0])),min=Math.min.apply(null,values.concat([0]));
+    var range = (max-min)||1;
+    var step = w/(values.length-1||1);
+    var pts = values.map(function(v,i){ return (i*step).toFixed(1)+","+(h-((v-min)/range)*h).toFixed(1); }).join(" ");
+    return "<svg class=\"tt-spark\" viewBox=\"0 0 "+w+" "+h+"\" width=\"100%\" height=\"34\" preserveAspectRatio=\"none\" aria-hidden=\"true\">"+
+      "<polyline points=\""+pts+"\" fill=\"none\" stroke=\""+color+"\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>";
+  }
+  function bindDelegated(container, selector, buildHtml){
+    if(!container) return;
+    container.addEventListener("mouseover", function(e){
+      var target = e.target.closest(selector);
+      if(!target || !container.contains(target)) return;
+      var html = buildHtml(target);
+      if(html) show(e.clientX, e.clientY, html);
+    });
+    container.addEventListener("mousemove", function(e){
+      var target = e.target.closest(selector);
+      if(!target) return;
+      if(ensure().classList.contains("show")) position(e.clientX, e.clientY);
+    });
+    container.addEventListener("mouseout", function(e){
+      var target = e.target.closest(selector);
+      if(!target) return;
+      if(e.relatedTarget && target.contains(e.relatedTarget)) return;
+      hide();
+    });
+  }
+  return {show:show,hide:hide,sparkSvg:sparkSvg,bindDelegated:bindDelegated};
+})();
+
+/* ============================== COMBO =================================== */
+/* Combobox pesquisavel: substitui o <select> nativo por um botao + painel
+   com campo de busca, permitindo filtrar os itens da lista digitando.
+   Usado pelos filtros Empresa, Projeto e Mes de referencia. */
+var Combo = (function(){
+  function create(opts){
+    var btn = document.getElementById(opts.btnId);
+    var panel = document.getElementById(opts.panelId);
+    var search = document.getElementById(opts.searchId);
+    var list = document.getElementById(opts.listId);
+    var wrap = btn.closest(".combo");
+    var state = { options: [], value: "__all__" };
+
+    function renderList(filterText){
+      var q = Utils.norm(filterText||"");
+      var items = [{value:"__all__", label:opts.allLabel}].concat(state.options);
+      var matched = items.filter(function(it){ return q==="" || Utils.norm(it.label).indexOf(q)!==-1; });
+      list.innerHTML = "";
+      if(!matched.length){
+        var empty = document.createElement("div");
+        empty.className = "combo-empty";
+        empty.textContent = "Nenhum resultado";
+        list.appendChild(empty);
+        return;
+      }
+      var frag = document.createDocumentFragment();
+      matched.forEach(function(it){
+        var li = document.createElement("li");
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "combo-option";
+        b.setAttribute("role","option");
+        b.setAttribute("aria-selected", String(it.value===state.value));
+        b.textContent = it.label;
+        b.addEventListener("click", function(){ selectValue(it.value, it.label); });
+        li.appendChild(b);
+        frag.appendChild(li);
+      });
+      list.appendChild(frag);
+    }
+
+    function selectValue(value, label){
+      state.value = value;
+      btn.textContent = label;
+      close();
+      opts.onSelect(value);
+    }
+
+    function open(){
+      panel.hidden = false;
+      wrap.classList.add("open");
+      btn.setAttribute("aria-expanded","true");
+      search.value = "";
+      renderList("");
+      search.focus();
+    }
+    function close(){
+      panel.hidden = true;
+      wrap.classList.remove("open");
+      btn.setAttribute("aria-expanded","false");
+    }
+
+    btn.addEventListener("click", function(e){
+      e.stopPropagation();
+      panel.hidden ? open() : close();
+    });
+    search.addEventListener("input", function(){ renderList(search.value); });
+    search.addEventListener("keydown", function(e){
+      if(e.key==="Escape"){ close(); btn.focus(); }
+      else if(e.key==="Enter"){
+        var first = list.querySelector(".combo-option");
+        if(first) first.click();
+      }
+    });
+    document.addEventListener("click", function(e){
+      if(panel.hidden) return;
+      if(!panel.contains(e.target) && e.target!==btn) close();
+    });
+    document.addEventListener("keydown", function(e){
+      if(e.key==="Escape" && !panel.hidden) close();
+    });
+
+    return {
+      setOptions: function(options){ state.options = options; },
+      setValue: function(value, label){ state.value = value; btn.textContent = label; }
+    };
+  }
+  return { create: create };
+})();
+
+/* ============================== FILTERS =============================== */
+var Filters = (function(){
+  var state = { q:"", empresa:"__all__", projeto:"__all__", mes:"__all__", sortKey:"dl", sortDir:"desc", page:1, pageSize:10 };
+  var comboEmpresa, comboProjeto, comboMes;
+
+  function monthsList(){
+    var set = {};
+    RAN.forEach(function(r){ set[Utils.parseYM(r.d)] = true; });
+    return Object.keys(set).sort();
+  }
+
+  function empresaOptions(){
+    var empresas = [];
+    PRJ.forEach(function(p){ if(empresas.indexOf(p.e)===-1) empresas.push(p.e); });
+    empresas.sort();
+    return empresas.map(function(e){ return {value:e, label:e}; });
+  }
+
+  /* Lista de projetos depende da empresa selecionada (filtro em cascata). */
+  function projetoOptions(){
+    var nomes = [];
+    PRJ.forEach(function(p){
+      if(state.empresa!=="__all__" && p.e!==state.empresa) return;
+      if(nomes.indexOf(p.p)===-1) nomes.push(p.p);
+    });
+    nomes.sort();
+    return nomes.map(function(p){ return {value:p, label:p}; });
+  }
+
+  function monthOptions(){
+    return monthsList().map(function(ym){ return {value:ym, label:Utils.monthLabel(ym)}; });
+  }
+
+  function populateSelects(){
+    comboEmpresa = Combo.create({
+      btnId:"fEmpresaBtn", panelId:"fEmpresaPanel", searchId:"fEmpresaSearch", listId:"fEmpresaList",
+      allLabel:"Todas as empresas",
+      onSelect:function(value){
+        state.empresa = value;
+        comboProjeto.setOptions(projetoOptions());
+        comboProjeto.setValue("__all__","Todos os projetos");
+        state.projeto = "__all__";
+        apply();
+      }
+    });
+    comboEmpresa.setOptions(empresaOptions());
+
+    comboProjeto = Combo.create({
+      btnId:"fProjetoBtn", panelId:"fProjetoPanel", searchId:"fProjetoSearch", listId:"fProjetoList",
+      allLabel:"Todos os projetos",
+      onSelect:function(value){ state.projeto = value; apply(); }
+    });
+    comboProjeto.setOptions(projetoOptions());
+
+    comboMes = Combo.create({
+      btnId:"fMesBtn", panelId:"fMesPanel", searchId:"fMesSearch", listId:"fMesList",
+      allLabel:"Todos os meses",
+      onSelect:function(value){ state.mes = value; apply(); }
+    });
+    comboMes.setOptions(monthOptions());
+  }
+
+  function currentFiltered(){
+    var q = Utils.norm(state.q);
+    return PRJ.filter(function(p){
+      var okQ = q==="" || Utils.norm(p.p).indexOf(q)!==-1 || Utils.norm(p.e).indexOf(q)!==-1;
+      var okE = state.empresa==="__all__" || p.e===state.empresa;
+      var okP = state.projeto==="__all__" || p.p===state.projeto;
+      return okQ && okE && okP;
+    });
+  }
+
+  function sorted(list){
+    var key = state.sortKey, dir = state.sortDir==="asc"?1:-1;
+    return list.slice().sort(function(a,b){
+      var va=a[key], vb=b[key];
+      if(typeof va === "string"){ va=Utils.norm(va); vb=Utils.norm(vb); }
+      if(va<vb) return -1*dir;
+      if(va>vb) return 1*dir;
+      return 0;
+    });
+  }
+
+  function ranFiltered(){
+    if(state.mes==="__all__") return RAN;
+    return RAN.filter(function(r){ return Utils.parseYM(r.d)===state.mes; });
+  }
+
+  function apply(){
+    state.page = 1;
+    Main.refresh();
+  }
+
+  function reset(){
+    state.q=""; state.empresa="__all__"; state.projeto="__all__"; state.mes="__all__";
+    document.getElementById("globalSearch").value="";
+    comboEmpresa.setValue("__all__","Todas as empresas");
+    comboProjeto.setOptions(projetoOptions());
+    comboProjeto.setValue("__all__","Todos os projetos");
+    comboMes.setValue("__all__","Todos os meses");
+    apply();
+  }
+
+  return {state:state, populateSelects:populateSelects, currentFiltered:currentFiltered,
+          sorted:sorted, ranFiltered:ranFiltered, apply:apply, reset:reset};
+})();
+
+/* ============================== CHARTS ================================ */
+var Charts = (function(){
+  var STCOLOR = { VALIDADO:"--success", PENDENTE:"--warning", NENHUM:"--neutral" };
+  var C = {}; /* cache of resolved theme colors, refreshed on theme change only */
+
+  function readVar(name){
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function refreshTheme(){
+    C.border = readVar("--border");
+    C.primary = readVar("--primary");
+    C.primary2 = readVar("--primary-2");
+    C.warning = readVar("--warning");
+    C.textTertiary = readVar("--text-tertiary");
+    C.status = {};
+    Object.keys(STCOLOR).forEach(function(k){ C.status[k] = readVar(STCOLOR[k]); });
+    Main.refresh();
+  }
+
+  function donut(data){
+    var counts = {};
+    data.forEach(function(p){ counts[p.st] = (counts[p.st]||0)+1; });
+    var total = data.length || 1;
+    var cx=70, cy=70, r=54, sw=18, circ=2*Math.PI*r;
+    var svg = document.getElementById("donutSvg");
+    var parts = ["<circle cx=\""+cx+"\" cy=\""+cy+"\" r=\""+r+"\" fill=\"none\" stroke=\""+C.border+"\" stroke-width=\""+sw+"\"/>"];
+    var offset = 0;
+    var keys = Object.keys(counts);
+    keys.forEach(function(k){
+      var frac = counts[k]/total;
+      var len = frac*circ;
+      var col = C.status[k] || C.primary;
+      parts.push("<circle class=\"donut-seg\" cx=\""+cx+"\" cy=\""+cy+"\" r=\""+r+"\" fill=\"none\" stroke=\""+col+"\" stroke-width=\""+sw+"\" stroke-linecap=\"butt\" stroke-dasharray=\""+len.toFixed(2)+" "+(circ-len).toFixed(2)+"\" stroke-dashoffset=\""+(-offset).toFixed(2)+"\" transform=\"rotate(-90 "+cx+" "+cy+")\" style=\"transition:stroke-dasharray .5s ease\"/>");
+      offset += len;
+    });
+    parts.push("<text x=\""+cx+"\" y=\""+(cy-3)+"\" text-anchor=\"middle\" class=\"donut-center-label\">"+data.length+"</text>");
+    parts.push("<text x=\""+cx+"\" y=\""+(cy+11)+"\" text-anchor=\"middle\" class=\"donut-center-sub\">PROJETOS</text>");
+    svg.innerHTML = parts.join("");
+    document.getElementById("donutTotal").textContent = data.length+" no filtro";
+
+    var leg = document.getElementById("donutLegend");
+    var frag = document.createDocumentFragment();
+    keys.sort(function(a,b){ return counts[b]-counts[a]; }).forEach(function(k){
+      var row = document.createElement("div");
+      row.className = "legend-row";
+      row.setAttribute("data-tooltip-status", k);
+      var dot = document.createElement("span"); dot.className="legend-dot"; dot.style.background = C.status[k]||C.primary;
+      var name = document.createElement("span"); name.className="legend-name"; name.textContent=k;
+      var val = document.createElement("span"); val.className="legend-val num"; val.textContent = counts[k]+" ("+Math.round(counts[k]/total*100)+"%)";
+      row.appendChild(dot); row.appendChild(name); row.appendChild(val);
+      frag.appendChild(row);
+    });
+    leg.innerHTML = "";
+    leg.appendChild(frag);
+  }
+
+  function bars(ranData){
+    var svg = document.getElementById("barsSvg");
+    var W=900, H=220, padL=8, padR=8, padB=26, padT=10;
+    var innerW = W-padL-padR, innerH = H-padT-padB;
+    var n = ranData.length || 1;
+    var slot = innerW/n;
+    var barW = Math.min(20, slot*0.42);
+    var maxV = 0;
+    ranData.forEach(function(r){ maxV = Math.max(maxV, Math.abs(r.real), Math.abs(r.proj)); });
+    if(maxV===0) maxV = 1;
+    var zeroY = padT + innerH*0.82;
+    var scale = (innerH*0.78)/maxV;
+    var labelEvery = n > 18 ? 3 : (n > 10 ? 2 : 1);
+    var parts = [];
+    parts.push("<line x1=\""+padL+"\" y1=\""+zeroY+"\" x2=\""+(W-padR)+"\" y2=\""+zeroY+"\" stroke=\""+C.textTertiary+"\" stroke-opacity=\"0.3\"/>");
+    var trendPts = [];
+    ranData.forEach(function(r,i){
+      var x0 = padL + i*slot + (slot-barW)/2;
+      var val = r.real!==0 ? r.real : r.proj;
+      var h = Math.abs(val)*scale;
+      var y = val>=0 ? zeroY-h : zeroY;
+      var col = r.real!==0 ? C.primary : C.primary2;
+      var ym = Utils.parseYM(r.d);
+      parts.push("<rect class=\"bar-rect\" data-tooltip-bar=\""+i+"\" x=\""+x0.toFixed(1)+"\" y=\""+y.toFixed(1)+"\" width=\""+barW.toFixed(1)+"\" height=\""+Math.max(h,2).toFixed(1)+"\" rx=\"3\" fill=\""+col+"\"/>");
+      if(i%labelEvery===0){
+        parts.push("<text x=\""+(x0+barW/2).toFixed(1)+"\" y=\""+(H-8)+"\" text-anchor=\"middle\" font-size=\"10\" fill=\""+C.textTertiary+"\">"+Utils.monthLabel(ym)+"</text>");
+      }
+      trendPts.push((x0+barW/2).toFixed(1)+","+(val>=0?y:zeroY+h).toFixed(1));
+    });
+    parts.push("<polyline points=\""+trendPts.join(" ")+"\" fill=\"none\" stroke=\""+C.warning+"\" stroke-width=\"1.6\" stroke-dasharray=\"4 3\" opacity=\"0.9\"/>");
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+    svg.innerHTML = parts.join("");
+  }
+
+  function sparkline(values, color){
+    if(!values.length) return "";
+    var w=84,h=30,max=Math.max.apply(null,values.concat([0])),min=Math.min.apply(null,values.concat([0]));
+    var range=(max-min)||1, step=w/(values.length-1||1);
+    var pts = values.map(function(v,i){ return (i*step).toFixed(1)+","+(h-((v-min)/range)*h).toFixed(1); }).join(" ");
+    var last = values[values.length-1];
+    var lastX = ((values.length-1)*step).toFixed(1);
+    var lastY = (h-((last-min)/range)*h).toFixed(1);
+    return "<svg class=\"kpi-spark\" viewBox=\"0 0 "+w+" "+h+"\" preserveAspectRatio=\"none\" aria-hidden=\"true\">"+
+      "<polyline points=\""+pts+"\" fill=\"none\" stroke=\""+color+"\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"+
+      "<circle cx=\""+lastX+"\" cy=\""+lastY+"\" r=\"2.4\" fill=\""+color+"\"/></svg>";
+  }
+
+  return {donut:donut, bars:bars, sparkline:sparkline, refreshTheme:refreshTheme, colors:function(){return C;}};
+})();
+
+/* ============================== TABLE ================================= */
+var Table = (function(){
+  function row(p){
+    var dlCls = p.dl>=0 ? "cell-up":"cell-dn";
+    return "<tr data-tooltip-row=\"1\" data-p=\""+Utils.escapeHtml(p.p)+"\">"+
+      "<td><span class=\"proj-name\">"+Utils.escapeHtml(p.p)+"</span></td>"+
+      "<td>"+Utils.escapeHtml(p.e)+"</td>"+
+      "<td class=\"num\">"+Utils.fmtBRL(p.si)+"</td>"+
+      "<td class=\"num\">"+Utils.fmtBRL(p.sv)+"</td>"+
+      "<td class=\"num "+dlCls+"\">"+Utils.fmtBRL(p.dl)+"</td>"+
+      "<td class=\"num\">"+Utils.fmtPct(p.ml)+"</td>"+
+      "</tr>";
+  }
+  function render(list){
+    var st = Filters.state;
+    var totalPages = Math.max(1, Math.ceil(list.length/st.pageSize));
+    if(st.page>totalPages) st.page = totalPages;
+    var start = (st.page-1)*st.pageSize;
+    var pageItems = list.slice(start, start+st.pageSize);
+    var body = document.getElementById("tblBody");
+    body.innerHTML = pageItems.length
+      ? pageItems.map(row).join("")
+      : "<tr class=\"empty-row\"><td colspan=\"6\">Nenhum projeto encontrado para os filtros atuais.</td></tr>";
+    document.getElementById("pagInfo").textContent = "P\u00e1gina "+st.page+" de "+totalPages;
+    document.getElementById("btnPrev").disabled = st.page<=1;
+    document.getElementById("btnNext").disabled = st.page>=totalPages;
+    document.getElementById("tableCount").textContent = list.length+" projeto(s)";
+    document.querySelectorAll("#dataTable thead th").forEach(function(th){
+      var isSorted = th.getAttribute("data-key")===st.sortKey;
+      th.classList.toggle("sorted", isSorted);
+      var ind = th.querySelector(".sort-ind");
+      if(ind) ind.innerHTML = (isSorted && st.sortDir==="asc") ? "&#9650;" : "&#9660;";
+      th.setAttribute("aria-sort", isSorted ? (st.sortDir==="asc" ? "ascending" : "descending") : "none");
+    });
+    var live = document.getElementById("liveRegion");
+    if(live) live.textContent = list.length+" projeto(s) encontrado(s).";
+  }
+  function toggleSort(key){
+    var st = Filters.state;
+    if(st.sortKey===key){ st.sortDir = st.sortDir==="asc"?"desc":"asc"; }
+    else { st.sortKey = key; st.sortDir = (key==="p"||key==="e") ? "asc":"desc"; }
+    Main.refresh();
+  }
+  function bindEvents(){
+    var thead = document.querySelector("#dataTable thead");
+    thead.addEventListener("click", function(e){
+      var th = e.target.closest("th[data-key]");
+      if(th) toggleSort(th.getAttribute("data-key"));
+    });
+    thead.addEventListener("keydown", function(e){
+      if(e.key!=="Enter" && e.key!==" ") return;
+      var th = e.target.closest("th[data-key]");
+      if(!th) return;
+      e.preventDefault();
+      toggleSort(th.getAttribute("data-key"));
+    });
+    document.getElementById("btnPrev").addEventListener("click", function(){
+      if(Filters.state.page>1){ Filters.state.page--; Main.refresh(); }
+    });
+    document.getElementById("btnNext").addEventListener("click", function(){
+      Filters.state.page++; Main.refresh();
+    });
+  }
+  return {render:render, bindEvents:bindEvents};
+})();
+
+/* ============================== KPIs =================================== */
+var Kpis = (function(){
+  var ICONS = {
+    money: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v10M9.5 9.5c0-1.4 1.2-2.5 2.5-2.5s2.5 .9 2.5 2c0 3-5 1.5-5 4.5 0 1.1 1.2 2 2.5 2s2.5-1.1 2.5-2.5\"/></svg>",
+    target: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/></svg>",
+    trend: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 17l6-6 4 4 8-9\"/><path d=\"M15 6h6v6\"/></svg>",
+    building: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"1\"/><path d=\"M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1\"/></svg>"
+  };
+  var defs = [
+    {id:"si", icon:"money", cls:"blue", label:"Saldo Realizado"},
+    {id:"sv", icon:"target", cls:"purple", label:"Saldo Planejado"},
+    {id:"dl", icon:"trend", cls:"green", label:"Delta Realizado x Via"},
+    {id:"ct", icon:"building", cls:"blue", label:"Projetos no Filtro"}
+  ];
+  function ensureCards(){
+    var grid = document.getElementById("kpiGrid");
+    if(grid.children.length) return;
+    var frag = document.createDocumentFragment();
+    defs.forEach(function(d){
+      var card = document.createElement("div");
+      card.className = "kpi-card glass";
+      card.setAttribute("data-tooltip-kpi", d.id);
+      card.innerHTML =
+        "<div class=\"kpi-top\"><div class=\"kpi-icon "+d.cls+"\">"+ICONS[d.icon]+"</div></div>"+
+        "<div class=\"kpi-label\">"+d.label+"</div>"+
+        "<div class=\"kpi-value num\" id=\"kpi-"+d.id+"-value\">&mdash;</div>"+
+        "<div class=\"kpi-sub\" id=\"kpi-"+d.id+"-sub\"></div>";
+      frag.appendChild(card);
+    });
+    grid.appendChild(frag);
+  }
+  function chip(delta){
+    var up = delta>=0;
+    var arrow = up ? "<path d=\"M12 19V5M5 12l7-7 7 7\"/>" : "<path d=\"M12 5v14M5 12l7 7 7-7\"/>";
+    return "<span class=\"chip "+(up?"up":"dn")+"\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\">"+arrow+"</svg>"+Utils.fmtBRLk(Math.abs(delta))+"</span>";
+  }
+  function render(list){
+    ensureCards();
+    var si=0, sv=0, dl=0, validados=0;
+    list.forEach(function(p){ si+=p.si; sv+=p.sv; dl+=p.dl; if(p.st==="VALIDADO") validados++; });
+    var C = Charts.colors();
+
+    document.getElementById("kpi-si-value").textContent = Utils.fmtBRL(si);
+    document.getElementById("kpi-si-sub").textContent = list.length+" projeto(s) no filtro";
+
+    document.getElementById("kpi-sv-value").textContent = Utils.fmtBRL(sv);
+    document.getElementById("kpi-sv-sub").textContent = "Base de planejado original";
+
+    document.getElementById("kpi-dl-value").textContent = Utils.fmtBRL(dl);
+    document.getElementById("kpi-dl-sub").innerHTML = chip(dl) + " " + (dl>=0?"acima":"abaixo") + " da planejado";
+
+    document.getElementById("kpi-ct-value").textContent = list.length;
+    document.getElementById("kpi-ct-sub").textContent = validados+" validado(s) \u00b7 "+(list.length-validados)+" outro(s)";
+
+    document.querySelectorAll("#kpiGrid .kpi-spark").forEach(function(el){ el.remove(); });
+    var realSeries = RAN.map(function(r){ return r.real!==0? r.real : r.proj; });
+    var projSeries = RAN.map(function(r){ return r.proj; });
+    var deltaSeries = RAN.map(function(r){ return r.real - r.proj; });
+    var validBuckets = [];
+    var step = Math.max(1, Math.floor(PRJ.length/12));
+    for(var i=0;i<PRJ.length;i+=step){ validBuckets.push(PRJ.slice(i,i+step).filter(function(p){return p.st==="VALIDADO";}).length); }
+
+    document.querySelectorAll("#kpiGrid .kpi-card").forEach(function(card, idx){
+      var el;
+      if(idx===0) el = Charts.sparkline(realSeries, C.primary);
+      else if(idx===1) el = Charts.sparkline(projSeries, C.primary2);
+      else if(idx===2) el = Charts.sparkline(deltaSeries, dl>=0?C.status.VALIDADO:C.status.PENDENTE);
+      else el = Charts.sparkline(validBuckets, C.primary);
+      card.insertAdjacentHTML("beforeend", el);
+    });
+  }
+  return {render:render};
+})();
+
+/* ============================== TICKER ================================= */
+var Ticker = (function(){
+  function render(){
+    var sortedList = TKR.slice().sort(function(a,b){ return b.dl-a.dl; });
+    var html = sortedList.map(function(t){
+      var up = t.dl>=0;
+      var arrow = up ? "<path d=\"M12 19V5M5 12l7-7 7 7\"/>" : "<path d=\"M12 5v14M5 12l7 7 7-7\"/>";
+      return "<span class=\"t-item\" data-tooltip-ticker=\""+Utils.escapeHtml(t.p)+"\" tabindex=\"0\"><b>"+Utils.escapeHtml(t.p)+"</b>"+
+        "<span class=\"chip "+(up?"up":"dn")+"\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\">"+arrow+"</svg>"+Utils.fmtBRLk(Math.abs(t.dl))+"</span></span>";
+    }).join("");
+    var track = document.getElementById("tickerTrack");
+    track.innerHTML = html + html;
+  }
+  return {render:render};
+})();
+
+/* ============================== EXPORT ================================= */
+var ExportCsv = (function(){
+  function run(){
+    var list = Filters.sorted(Filters.currentFiltered());
+    var head = "Projeto;Empresa;Status;SaldoRealizado;SaldoPlanejado;Delta;MargemLiquida";
+    var lines = list.map(function(p){
+      return [p.p, p.e, p.st, p.si.toFixed(2), p.sv.toFixed(2), p.dl.toFixed(2), Utils.percValue(p.ml).toFixed(2)].join(";");
+    });
+    var csv = head + "\n" + lines.join("\n");
+    var blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "projetos_planejado.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  return {run:run};
+})();
+
+/* ============================== MAIN ==================================== */
+var Main = (function(){
+  var rafPending = false;
+
+  function refresh(){
+    if(rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function(){
+      rafPending = false;
+      var filtered = Filters.sorted(Filters.currentFiltered());
+      Kpis.render(filtered);
+      Charts.donut(filtered);
+      Charts.bars(Filters.ranFiltered());
+      Table.render(filtered);
+    });
+  }
+
+  function bindTooltips(){
+    var kpiGrid = document.getElementById("kpiGrid");
+    Tooltip.bindDelegated(kpiGrid, "[data-tooltip-kpi]", function(el){
+      var id = el.getAttribute("data-tooltip-kpi");
+      var labels = {si:"Saldo Realizado", sv:"Saldo Planejado", dl:"Delta", ct:"Projetos"};
+      return "<h3>"+labels[id]+"</h3><div class=\"tt-row\"><span>Baseado no filtro atual</span></div>";
+    });
+
+    var ticker = document.getElementById("tickerTrack");
+    Tooltip.bindDelegated(ticker, "[data-tooltip-ticker]", function(el){
+      var name = el.getAttribute("data-tooltip-ticker");
+      var proj = PRJ.filter(function(p){ return p.p===name; })[0];
+      if(!proj) return "";
+      return "<h3>"+Utils.escapeHtml(proj.p)+"</h3>"+
+        "<div class=\"tt-row\"><span>Empresa</span><b>"+Utils.escapeHtml(proj.e)+"</b></div>"+
+        "<div class=\"tt-row\"><span>Saldo Realizado</span><b>"+Utils.fmtBRL(proj.si)+"</b></div>"+
+        "<div class=\"tt-row\"><span>Saldo Planejado</span><b>"+Utils.fmtBRL(proj.sv)+"</b></div>"+
+        "<div class=\"tt-row\"><span>Delta</span><b>"+Utils.fmtBRL(proj.dl)+"</b></div>";
+    });
+
+    var donutLegend = document.getElementById("donutLegend");
+    Tooltip.bindDelegated(donutLegend, "[data-tooltip-status]", function(el){
+      var st = el.getAttribute("data-tooltip-status");
+      var list = Filters.currentFiltered().filter(function(p){ return p.st===st; });
+      return "<h3>Status: "+st+"</h3><div class=\"tt-row\"><span>Projetos</span><b>"+list.length+"</b></div>";
+    });
+
+    var barsSvg = document.getElementById("barsSvg");
+    Tooltip.bindDelegated(barsSvg, "[data-tooltip-bar]", function(el){
+      var idx = parseInt(el.getAttribute("data-tooltip-bar"),10);
+      var ran = Filters.ranFiltered();
+      var r = ran[idx];
+      if(!r) return "";
+      var ym = Utils.parseYM(r.d);
+      var val = r.real!==0 ? r.real : r.proj;
+      var tipo = r.real!==0 ? "Realizado" : "Projetado";
+      return "<h3>"+Utils.monthLabel(ym)+"</h3>"+
+        "<div class=\"tt-row\"><span>"+tipo+"</span><b>"+Utils.fmtBRL(val)+"</b></div>";
+    });
+
+    var tbody = document.getElementById("tblBody");
+    Tooltip.bindDelegated(tbody, "tr[data-tooltip-row]", function(el){
+      var name = el.getAttribute("data-p");
+      var proj = PRJ.filter(function(p){ return p.p===name; })[0];
+      if(!proj) return "";
+      return "<h3>"+Utils.escapeHtml(proj.p)+"</h3>"+
+        "<div class=\"tt-row\"><span>Empresa</span><b>"+Utils.escapeHtml(proj.e)+"</b></div>"+
+        "<div class=\"tt-row\"><span>Status</span><b>"+proj.st+"</b></div>"+
+        "<div class=\"tt-row\"><span>Margem L\u00edquida</span><b>"+Utils.fmtPct(proj.ml)+"</b></div>";
+    });
+
+    var header = document.querySelector(".header-right");
+    Tooltip.bindDelegated(header, "[data-tooltip-generic]", function(el){
+      var title = el.getAttribute("data-tt-title");
+      var text = el.getAttribute("data-tt-text");
+      return "<h3>"+Utils.escapeHtml(title)+"</h3><div class=\"tt-row\"><span>"+Utils.escapeHtml(text)+"</span></div>";
+    });
+  }
+
+  function bindFilters(){
+    document.getElementById("globalSearch").addEventListener("input", Utils.debounce(function(e){
+      Filters.state.q = e.target.value; Filters.apply();
+    }, 140));
+    document.getElementById("btnReset").addEventListener("click", Filters.reset);
+    document.getElementById("btnExport").addEventListener("click", ExportCsv.run);
+    document.getElementById("themeToggle").addEventListener("click", Theme.toggle);
+  }
+
+  function setLastUpdate(){
+    var maxDate = null;
+    RAN.forEach(function(r){
+      if(r.real!==0){
+        var p = r.d.split("/");
+        var d = new Date(parseInt(p[2],10), parseInt(p[1],10)-1, 1);
+        if(!maxDate || d>maxDate) maxDate=d;
+      }
+    });
+    var el = document.getElementById("lastUpdate");
+    if(maxDate){
+      var meses=["janeiro","fevereiro","mar\u00e7o","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+      el.textContent = "Base: "+meses[maxDate.getMonth()]+"/"+maxDate.getFullYear();
+    }
+  }
+
+  function init(){
+    Theme.init();
+    Charts.refreshTheme();
+    Filters.populateSelects();
+    Table.bindEvents();
+    bindFilters();
+    bindTooltips();
+    setLastUpdate();
+    Ticker.render();
+    refresh();
+  }
+
+  return {init:init, refresh:refresh};
+})();
+
+Main.init();
+
+})();
+
+</script>
+</body>
+</html>
