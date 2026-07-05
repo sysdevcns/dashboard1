@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Executivo - Viabilidade x Incorrido</title>
+<style>
+/* ===================== DESIGN TOKENS ===================== */
+/* ------------------------------------------------------------------------
+   PALETA DE CORES DO TEMA - edite somente aqui para ajustar cores globais.
+   :root                    = tema padrao (CLARO).
+   html[data-theme="dark"]  = sobrescreve as mesmas variaveis para o tema escuro.
+   Toda a UI (paineis, textos, graficos) le APENAS estas variaveis var(--x),
+   nunca cores fixas, entao mudar um valor aqui atualiza o dashboard inteiro.
+   ------------------------------------------------------------------------ */
+:root{
+  --bg:#eef1f6;
+  --bg-grad: radial-gradient(1200px 600px at 10% -10%, #dbe4ff 0%, transparent 60%), radial-gradient(1000px 700px at 110% 10%, #d9f3ea 0%, transparent 55%), #eef1f6;
+  --card: rgba(255,255,255,0.72);
+  --card-solid:#ffffff;
+  --panel: rgba(255,255,255,0.62);
+  --text:#14151f;
+  --text-secondary:#454a56;
+  --text-tertiary:#5b6170;
+  --border: rgba(20,22,35,0.10);
+  --border-strong: rgba(20,22,35,0.20);
+  --success:#0b7a4d;
+  --success-bg: rgba(11,122,77,0.12);
+  --warning:#8f5f09;
+  --warning-bg: rgba(143,95,9,0.12);
+  --danger:#c53535;
+  --danger-bg: rgba(197,53,53,0.12);
+  --neutral:#565c68;
+  --neutral-bg: rgba(86,92,104,0.12);
+  --primary:#3153f2;
+  --primary-2:#6d4ff0;
+  --primary-bg: rgba(49,83,242,0.10);
+  --shadow-sm: 0 1px 2px rgba(20,22,35,0.06);
+  --shadow-md: 0 10px 30px rgba(20,22,35,0.10);
+  --shadow-lg: 0 24px 60px rgba(20,22,35,0.16);
+  --blur: 20px;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --focus: 0 0 0 3px rgba(49,83,242,0.45);
+  color-scheme: light;
+}
+html[data-theme="dark"]{
+  --bg:#0a0b10;
+  --bg-grad: radial-gradient(1200px 600px at 10% -10%, rgba(64,90,220,0.20) 0%, transparent 60%), radial-gradient(1000px 700px at 110% 10%, rgba(30,150,120,0.16) 0%, transparent 55%), #0a0b10;
+  --card: rgba(255,255,255,0.065);
+  --card-solid:#15171f;
+  --panel: rgba(255,255,255,0.05);
+  --text:#f2f3f8;
+  --text-secondary:#b7bccb;
+  --text-tertiary:#8b90a0;
+  --border: rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.20);
+  --success:#4fe0a4;
+  --success-bg: rgba(79,224,164,0.15);
+  --warning:#f6c169;
+  --warning-bg: rgba(246,193,105,0.15);
+  --danger:#ff7f7f;
+  --danger-bg: rgba(255,127,127,0.15);
+  --neutral:#a7acba;
+  --neutral-bg: rgba(167,172,186,0.15);
+  --primary:#8aa0ff;
+  --primary-2:#bba7ff;
+  --primary-bg: rgba(138,160,255,0.16);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 10px 30px rgba(0,0,0,0.45);
+  --shadow-lg: 0 24px 70px rgba(0,0,0,0.55);
+  --focus: 0 0 0 3px rgba(138,160,255,0.55);
+  color-scheme: dark;
+}
+/* ===================== RESET / BASE ===================== */
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;overflow-y:auto;overflow-x:hidden}
+body{
+  margin:0;
+  background:var(--bg-grad);
+  color:var(--text);
+  font-family:"Segoe UI Variable","Segoe UI",-apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  transition:background .35s ease,color .35s ease;
+  line-height:1.45;
+}
+::selection{background:var(--primary);color:#fff}
+:focus-visible{outline:none;box-shadow:var(--focus);border-radius:8px}
+a{color:var(--primary)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.app{max-width:1400px;margin:0 auto;padding:18px 22px 60px}
+
+/* ===================== GLASS SURFACE ===================== */
+.glass{
+  background:var(--card);
+  backdrop-filter:blur(var(--blur)) saturate(150%);
+  -webkit-backdrop-filter:blur(var(--blur)) saturate(150%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .glass{background:var(--card-solid)}
+}
+@media (forced-colors: active){
+  .glass{background:Canvas;border:1px solid CanvasText}
+  .chip{forced-color-adjust:none}
+}
+
+/* ===================== HEADER ===================== */
+.header{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:14px 20px;margin-bottom:14px;position:sticky;top:12px;z-index:40;
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-icon{width:38px;height:38px;flex:none;border-radius:11px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md)}
+.brand-icon svg{width:20px;height:20px;stroke:#fff}
+.brand h1{font-size:16px;font-weight:650;margin:0;letter-spacing:.1px;color:var(--text)}
+.brand p{font-size:11.5px;margin:1px 0 0;color:var(--text-tertiary)}
+.header-center{flex:1;display:flex;justify-content:center;max-width:420px;margin:0 24px}
+.search-wrap{position:relative;width:100%}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--text-tertiary);pointer-events:none}
+.search-wrap input{
+  width:100%;padding:9px 12px 9px 34px;border-radius:999px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);font-size:12.5px;transition:box-shadow .2s,border-color .2s;
+}
+.search-wrap input::placeholder{color:var(--text-tertiary)}
+.search-wrap input:focus-visible{border-color:var(--primary);box-shadow:var(--focus)}
+.header-right{display:flex;align-items:center;gap:10px;flex:none}
+.last-update{font-size:11px;color:var(--text-tertiary);white-space:nowrap}
+.icon-btn{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--panel);
+  color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .15s ease,background .15s ease,border-color .15s;
+}
+.icon-btn:hover{background:var(--primary-bg);border-color:var(--primary);transform:translateY(-1px)}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor}
+
+/* ===================== TICKER ===================== */
+.ticker{overflow:hidden;white-space:nowrap;margin-bottom:14px;padding:9px 0;position:relative}
+.ticker::before,.ticker::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.ticker::before{left:0;background:linear-gradient(90deg,var(--bg) 10%,transparent)}
+.ticker::after{right:0;background:linear-gradient(270deg,var(--bg) 10%,transparent)}
+.ticker-track{display:inline-block;animation:tickerMove 46s linear infinite}
+.ticker-track:hover,.ticker-track:focus-within{animation-play-state:paused}
+@keyframes tickerMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.t-item{display:inline-flex;align-items:center;gap:6px;padding:0 20px;font-size:12px;color:var(--text-secondary);border-right:1px solid var(--border)}
+.t-item b{color:var(--text);font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:3px;font-weight:700;padding:1px 7px;border-radius:999px;font-size:11px}
+.chip.up{color:var(--success);background:var(--success-bg)}
+.chip.dn{color:var(--danger);background:var(--danger-bg)}
+.chip svg{width:10px;height:10px}
+
+/* ===================== TOOLBAR / FILTERS ===================== */
+.toolbar{position:relative;z-index:50;display:flex;flex-wrap:wrap;align-items:end;gap:14px;padding:14px 18px;margin-bottom:16px}
+.filter-group{position:relative;display:flex;flex-direction:column;gap:5px;min-width:170px}
+.filter-group label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);font-weight:700}
+/* ---- Combo: botao + painel com busca, substitui o <select> nativo para permitir
+   pesquisa dentro da lista (Empresa, Projeto, Mes de referencia). ---- */
+.combo{position:relative}
+.combo-btn{
+  width:100%;text-align:left;padding:8px 30px 8px 11px;border-radius:10px;border:1px solid var(--border);
+  background:var(--panel) url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%235b6170%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E) no-repeat right 9px center/13px;
+  color:var(--text);font-size:12.5px;font-family:inherit;cursor:pointer;transition:border-color .2s;min-height:36px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.combo-btn:hover{border-color:var(--border-strong)}
+.combo-btn:focus-visible{border-color:var(--primary);box-shadow:var(--focus)}
+.combo.open .combo-btn{border-color:var(--primary)}
+.combo-panel{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;min-width:220px;
+  background:var(--card-solid);border:1px solid var(--border-strong);border-radius:12px;
+  box-shadow:var(--shadow-lg);padding:8px;
+}
+.combo-search{
+  width:100%;box-sizing:border-box;padding:7px 10px;border-radius:8px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);font-size:12.5px;margin-bottom:6px;font-family:inherit;
+}
+.combo-search::placeholder{color:var(--text-tertiary)}
+.combo-search:focus-visible{border-color:var(--primary);box-shadow:var(--focus)}
+.combo-list{list-style:none;margin:0;padding:0;max-height:220px;overflow-y:auto}
+.combo-option{
+  width:100%;text-align:left;padding:7px 9px;border-radius:7px;border:none;background:transparent;
+  color:var(--text);font-size:12.5px;cursor:pointer;display:block;font-family:inherit;
+}
+.combo-option:hover,.combo-option.active{background:var(--primary-bg);color:var(--primary)}
+.combo-option[aria-selected="true"]{font-weight:700}
+.combo-empty{padding:10px 9px;font-size:12px;color:var(--text-tertiary);text-align:center}
+.toolbar .spacer{flex:1}
+.btn{padding:9px 16px;border-radius:10px;font-size:12.5px;font-weight:650;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:transform .15s,filter .15s;min-height:36px}
+.btn svg{width:14px;height:14px;flex:none}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;box-shadow:0 8px 20px rgba(49,83,242,0.28)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{background:var(--panel);border-color:var(--border);color:var(--text-secondary)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border-strong)}
+
+/* ===================== KPI CARDS ===================== */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi-card{position:relative;padding:16px 18px;overflow:hidden;cursor:default;min-width:0}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between}
+.kpi-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.kpi-icon svg{width:17px;height:17px}
+.kpi-icon.blue{background:var(--primary-bg);color:var(--primary)}
+.kpi-icon.green{background:var(--success-bg);color:var(--success)}
+.kpi-icon.red{background:var(--danger-bg);color:var(--danger)}
+.kpi-icon.purple{background:rgba(109,79,240,0.16);color:var(--primary-2)}
+.kpi-label{font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:12px}
+.kpi-value{color:var(--text);font-size:clamp(16px,3vw,23px);font-weight:750;margin-top:4px;letter-spacing:-.2px;word-break:break-word}
+.kpi-sub{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:11.5px;color:var(--text-tertiary)}
+.kpi-spark{position:absolute;right:14px;bottom:14px;width:84px;height:30px;opacity:.9}
+.kpi-card:hover{box-shadow:var(--shadow-md)}
+.kpi-card::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(160deg,rgba(255,255,255,0.10),transparent 40%);pointer-events:none}
+
+/* ===================== CHARTS ===================== */
+.charts-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:14px;margin-bottom:16px;align-items:stretch}
+.panel{padding:18px;min-width:0}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+.panel-head h2{font-size:13px;margin:0;font-weight:700;color:var(--text)}
+.panel-head span{font-size:11px;color:var(--text-tertiary)}
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.donut-center-label{font-size:20px;font-weight:750;fill:var(--text)}
+.donut-center-sub{font-size:8.5px;fill:var(--text-tertiary);letter-spacing:.08em}
+.legend{display:flex;flex-direction:column;gap:9px;font-size:12px;flex:1;min-width:140px}
+.legend-row{display:flex;align-items:center;gap:8px;cursor:default}
+.legend-dot{width:9px;height:9px;border-radius:3px;flex:none}
+.legend-name{flex:1;color:var(--text-secondary)}
+.legend-val{font-weight:700;color:var(--text)}
+.bars-wrap{width:100%;overflow-x:auto}
+.bars-inner{min-width:640px}
+.legend-inline{display:flex;gap:16px;font-size:11.5px;color:var(--text-secondary);margin-bottom:8px;flex-wrap:wrap}
+.legend-inline span{display:inline-flex;align-items:center;gap:6px}
+.legend-inline i{width:9px;height:9px;border-radius:2px;display:inline-block}
+svg.chart{width:100%;height:auto;display:block}
+.bar-rect{transition:opacity .15s;cursor:default}
+.bar-rect:hover{opacity:.78}
+.donut-seg{cursor:default}
+
+/* ===================== TABLE ===================== */
+.table-panel{padding:18px;margin-bottom:16px}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.table-toolbar h2{color:var(--text);font-size:13px;margin:0;font-weight:700}
+.table-toolbar span{font-size:11.5px;color:var(--text-tertiary)}
+.table-scroll{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:660px}
+thead th{
+  position:sticky;top:0;z-index:5;background:var(--card-solid);
+  text-align:left;padding:11px 12px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--text-tertiary);font-weight:700;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;
+}
+thead th:hover,thead th:focus-visible{color:var(--text)}
+thead th .sort-ind{opacity:.35;margin-left:4px;font-size:9px;display:inline-block}
+thead th.sorted{color:var(--primary)}
+thead th.sorted .sort-ind{opacity:1}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+tbody tr{transition:background .12s}
+tbody tr:hover td,tbody tr:focus-within td{background:var(--panel)}
+tbody tr:last-child td{border-bottom:none}
+.proj-name{font-weight:650}
+.proj-emp{display:block;font-size:10.5px;color:var(--text-tertiary);font-weight:400;margin-top:1px}
+.cell-num{font-family:inherit}
+.cell-up{color:var(--success);font-weight:600}
+.cell-dn{color:var(--danger);font-weight:600}
+.empty-row td{padding:34px 12px;text-align:center;color:var(--text-tertiary);font-size:12.5px}
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px;font-size:12px;color:var(--text-secondary)}
+.pg-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pg-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.pg-btn:disabled{opacity:.4;cursor:not-allowed}
+.pg-btn svg{width:14px;height:14px}
+
+/* ===================== FOOTER / LIVE REGION ===================== */
+.footer{text-align:center;padding:22px 0 4px;font-size:11px;color:var(--text-tertiary)}
+.sr-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ===================== TOOLTIP ===================== */
+.tooltip{
+  position:fixed;z-index:200;pointer-events:none;min-width:170px;max-width:260px;
+  background:var(--card-solid);border:1px solid var(--border-strong);border-radius:12px;
+  box-shadow:var(--shadow-lg);padding:12px 14px;font-size:11.5px;color:var(--text);
+  opacity:0;transform:translateY(4px) scale(.98);transition:opacity .12s ease,transform .12s ease;
+}
+.tooltip.show{opacity:1;transform:translateY(0) scale(1)}
+.tooltip h3{margin:0 0 6px;font-size:12px;font-weight:700;color:var(--text)}
+.tooltip .tt-row{display:flex;justify-content:space-between;gap:14px;padding:2px 0;color:var(--text-secondary)}
+.tooltip .tt-row b{color:var(--text);font-weight:700}
+.tooltip .tt-spark{margin-top:6px}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width:1100px){
+  .charts-grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:720px){
+  :root{--blur:8px}
+  .header{flex-wrap:wrap;position:static;padding:12px 16px}
+  .header-center{order:3;max-width:100%;margin:8px 0 0;width:100%}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi-spark{display:none}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .filter-group{width:100%}
+  .toolbar .spacer{display:none}
+  .toolbar .btn{width:100%}
+  .app{padding:12px}
+  .panel{padding:14px}
+  .table-panel{padding:14px}
+}
+@media (max-width:420px){
+  .kpis{grid-template-columns:1fr}
+}
+
+/* ---- Compacto por ALTURA da tela: o visual "HTML Content" do Power BI tem uma
+   caixa de tamanho fixo; se o conteudo for mais alto que essa caixa, ele e cortado
+   (o visual nao redimensiona sozinho). Estas regras reduzem paddings/gaps quando a
+   altura disponivel e curta, para que o painel inteiro caiba sem cortar graficos
+   ou a tabela. Como ultimo recurso, html,body permitem rolagem (ver RESET/BASE). ---- */
+@media (max-height:820px){
+  .app{padding:10px 16px 20px}
+  .header{padding:10px 16px;margin-bottom:10px;top:8px}
+  .ticker{margin-bottom:10px;padding:7px 0}
+  .toolbar{padding:10px 14px;margin-bottom:10px}
+  .kpis{gap:10px;margin-bottom:10px}
+  .kpi-card{padding:12px 14px}
+  .kpi-label{margin-top:8px}
+  .kpi-spark{height:22px;bottom:10px}
+  .charts-grid{gap:10px;margin-bottom:10px}
+  .panel{padding:12px}
+  .panel-head{margin-bottom:8px}
+  .table-panel{padding:12px;margin-bottom:10px}
+  .footer{padding:12px 0 2px}
+}
+@media (max-height:640px){
+  .header{position:static}
+  .kpi-spark{display:none}
+  .donut-wrap{gap:10px}
+  thead th{padding:8px 10px}
+  tbody td{padding:8px 10px}
+  .pagination{margin-top:8px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+
+<a class="visually-hidden" href="#mainContent">Pular para o conteúdo principal</a>
+<div class="app">
+  <header class="header glass">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></div>
+      <div>
+        <h1>Painel Executivo</h1>
+        <p class="subtitle">Viabilidade &times; Incorrido &middot; Diretoria de Finan&ccedil;as</p>
+      </div>
+    </div>
+    <div class="header-center" role="search">
+      <div class="search-wrap">
+        <label for="globalSearch" class="visually-hidden">Buscar projeto ou empresa</label>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="globalSearch" type="text" placeholder="Buscar projeto ou empresa&hellip;" autocomplete="off">
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="last-update" id="lastUpdate">&mdash;</span>
+      <button type="button" class="icon-btn" id="themeToggle" aria-label="Alternar tema (claro)" data-tooltip-generic="1" data-tt-title="Tema" data-tt-text="Clique para alternar entre claro e escuro"></button>
+    </div>
+  </header>
+
+  <div class="ticker glass" aria-label="Maiores desvios entre incorrido e viabilidade" role="region">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <form class="toolbar glass" id="filterForm" aria-label="Filtros do painel" onsubmit="return false">
+    <div class="filter-group">
+      <label id="fEmpresaLbl" for="fEmpresaBtn">Empresa</label>
+      <div class="combo" data-combo="empresa">
+        <button type="button" class="combo-btn" id="fEmpresaBtn" aria-haspopup="listbox" aria-expanded="false">Todas as empresas</button>
+        <div class="combo-panel" id="fEmpresaPanel" hidden>
+          <input type="text" class="combo-search" id="fEmpresaSearch" placeholder="Buscar empresa&hellip;" autocomplete="off" aria-label="Buscar empresa">
+          <ul class="combo-list" role="listbox" id="fEmpresaList" aria-labelledby="fEmpresaLbl"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label id="fProjetoLbl" for="fProjetoBtn">Projeto</label>
+      <div class="combo" data-combo="projeto">
+        <button type="button" class="combo-btn" id="fProjetoBtn" aria-haspopup="listbox" aria-expanded="false">Todos os projetos</button>
+        <div class="combo-panel" id="fProjetoPanel" hidden>
+          <input type="text" class="combo-search" id="fProjetoSearch" placeholder="Buscar projeto&hellip;" autocomplete="off" aria-label="Buscar projeto">
+          <ul class="combo-list" role="listbox" id="fProjetoList" aria-labelledby="fProjetoLbl"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label id="fMesLbl" for="fMesBtn">M&ecirc;s de refer&ecirc;ncia</label>
+      <div class="combo" data-combo="mes">
+        <button type="button" class="combo-btn" id="fMesBtn" aria-haspopup="listbox" aria-expanded="false">Todos os meses</button>
+        <div class="combo-panel" id="fMesPanel" hidden>
+          <input type="text" class="combo-search" id="fMesSearch" placeholder="Buscar m&ecirc;s&hellip;" autocomplete="off" aria-label="Buscar m&ecirc;s">
+          <ul class="combo-list" role="listbox" id="fMesList" aria-labelledby="fMesLbl"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button type="button" class="btn btn-ghost" id="btnReset">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      Limpar filtros
+    </button>
+    <button type="button" class="btn btn-primary" id="btnExport">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
+      Exportar CSV
+    </button>
+  </form>
+
+  <p class="sr-live" id="liveRegion" role="status" aria-live="polite"></p>
+
+  <main id="mainContent">
+    <h2 class="visually-hidden">Indicadores</h2>
+    <section class="kpis" id="kpiGrid" aria-label="Indicadores-chave"></section>
+
+    <h2 class="visually-hidden">Gráficos</h2>
+    <section class="charts-grid">
+      <div class="panel glass" aria-label="Status de validação dos projetos">
+        <div class="panel-head"><h2>Status de Valida&ccedil;&atilde;o</h2><span id="donutTotal"></span></div>
+        <div class="donut-wrap">
+          <svg class="chart" id="donutSvg" viewBox="0 0 140 140" role="img" aria-label="Gráfico de rosca com a distribuição de status dos projetos" style="width:140px;height:140px;flex:none"></svg>
+          <div class="legend" id="donutLegend"></div>
+        </div>
+      </div>
+      <div class="panel glass" aria-label="Fluxo de caixa mensal">
+        <div class="panel-head"><h2>Fluxo de Caixa Mensal</h2><span>Realizado &times; Projetado (R$)</span></div>
+        <div class="legend-inline">
+          <span><i style="background:var(--primary)" aria-hidden="true"></i>Realizado</span>
+          <span><i style="background:var(--primary-2)" aria-hidden="true"></i>Projetado</span>
+          <span><i style="background:var(--warning);border-radius:50%;width:6px;height:6px" aria-hidden="true"></i>Tend&ecirc;ncia</span>
+        </div>
+        <div class="bars-wrap">
+          <div class="bars-inner">
+            <svg class="chart" id="barsSvg" viewBox="0 0 900 220" role="img" aria-label="Gráfico de barras do fluxo de caixa mensal, realizado e projetado"></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <h2 class="visually-hidden">Detalhamento por projeto</h2>
+    <section class="table-panel glass" aria-label="Tabela de projetos">
+      <div class="table-toolbar">
+        <h2>Detalhamento por Projeto</h2>
+        <span id="tableCount"></span>
+      </div>
+      <div class="table-scroll">
+        <table id="dataTable">
+          <caption class="visually-hidden">Lista de projetos filtrados com saldo incorrido, saldo de viabilidade, delta e margem líquida. Clique em um cabeçalho de coluna para ordenar.</caption>
+          <thead>
+            <tr>
+              <th scope="col" data-key="p" tabindex="0" role="button" aria-sort="none">Projeto<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+              <th scope="col" data-key="e" tabindex="0" role="button" aria-sort="none">Empresa<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+              <th scope="col" data-key="si" tabindex="0" role="button" aria-sort="none">Saldo Incorrido<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+              <th scope="col" data-key="sv" tabindex="0" role="button" aria-sort="none">Saldo Viabilidade<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+              <th scope="col" data-key="dl" tabindex="0" role="button" aria-sort="descending">Delta<span class="sort-ind" aria-hidden="true">&#9660;</span></th>
+              <th scope="col" data-key="ml" tabindex="0" role="button" aria-sort="none">Margem L&iacute;quida<span class="sort-ind" aria-hidden="true">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span id="pagInfo"></span>
+        <button type="button" class="pg-btn" id="btnPrev" aria-label="P&aacute;gina anterior"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button type="button" class="pg-btn" id="btnNext" aria-label="Pr&oacute;xima p&aacute;gina"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Cury Construtora &middot; MIS / Controladoria &middot; Painel gerado a partir do modelo Power BI &ldquo;ACOMPANHAMENTO DE VIABILIDADE v1&rdquo;</footer>
+</div>
+<div class="tooltip" id="tooltip" role="tooltip" aria-hidden="true"></div>
+
+<script>
+
+(function(){
+"use strict";
+
+/* ==========================================================================
+   INDICE DO SCRIPT - cada secao abaixo e um modulo independente (IIFE).
+   Para alterar algo especifico, va direto na secao correspondente:
+
+   1. DATA      - arrays PRJ / RAN / TKR com os dados do modelo Power BI.
+   2. UTILS     - funcoes puras de formatacao (numero, moeda, data, texto).
+   3. THEME     - troca entre tema claro/escuro (cores ficam no CSS, em :root
+                  e html[data-theme="dark"]; aqui so trocamos o atributo).
+   4. TOOLTIP   - balao flutuante usado por KPIs, ticker, grafico e tabela.
+   5. COMBO     - combobox pesquisavel (botao + busca) usado pelos filtros.
+   6. FILTERS   - estado dos filtros (busca, empresa, projeto, mes) + ordenacao.
+   7. CHARTS    - donut de status e grafico de barras (fluxo de caixa).
+   8. TABLE     - montagem das linhas da tabela e paginacao.
+   9. KPIS      - os 4 cartoes de indicadores no topo do painel.
+   10. TICKER   - faixa de destaques (maiores desvios) no topo.
+   11. EXPORT   - exportacao da tabela filtrada para CSV.
+   12. MAIN     - inicializa tudo e liga os eventos (ponto de entrada).
+   ========================================================================== */
+
+/* ============================== DATA ================================ */
+var PRJ = [{"p":"337 - GUEDALA PARK I - MONTEREY - SP","e":"15 - MONTEREY INCORPORADORA SPE LTDA - SP","si":6776907,"sv":14333976,"dl":-12186448,"ml":0.1069,"st":"VALIDADO"},{"p":"364 - GUEDALA PARK II - MONTEREY - SP","e":"15 - MONTEREY INCORPORADORA SPE LTDA - SP","si":12168644,"sv":12171525,"dl":-4023970,"ml":0.1766,"st":"VALIDADO"},{"p":"365 - GUEDALA PARK III - MONTEREY - SP","e":"15 - MONTEREY INCORPORADORA SPE LTDA - SP","si":35892346,"sv":35854530,"dl":7571637,"ml":0.2336,"st":"VALIDADO"},{"p":"384 - VIVA MAIS SÃO GONÇALO - CCISA03 - RJ","e":"38 - CCISA03 INCORPORADORA LTDA - RJ","si":8236145,"sv":12726230,"dl":-4490085,"ml":0.1447,"st":"VALIDADO"},{"p":"423 - MEU LAR SÃO GONÇALO - CCISA03 - RJ","e":"38 - CCISA03 INCORPORADORA LTDA - RJ","si":-1891148,"sv":15179329,"dl":-7024145,"ml":-0.0041,"st":"VALIDADO"},{"p":"431 - COMPLETO GUANABARA - CCISA03 - RJ","e":"38 - CCISA03 INCORPORADORA LTDA - RJ","si":374094,"sv":12436278,"dl":-8310495,"ml":0.0246,"st":"VALIDADO"},{"p":"380 - MÉRITO JACAREPAGUÁ - CCISA05 - RJ","e":"43 - CCISA05 INCORPORADORA LTDA - RJ","si":25284917,"sv":28545241,"dl":8309932,"ml":0.227,"st":"VALIDADO"},{"p":"146 - BRITO - CCISA20 - RJ","e":"65 - CCISA20 INCORPORADORA LTDA - RJ","si":8962639,"sv":10632943,"dl":-1670304,"ml":0.1446,"st":"VALIDADO"},{"p":"407 - BRITO 2 - CCISA20 - RJ","e":"65 - CCISA20 INCORPORADORA LTDA - RJ","si":3691048,"sv":12451883,"dl":-3596559,"ml":0.0745,"st":"VALIDADO"},{"p":"120 - URBAN ZONA NORTE - LIVING BOTUCATU - RJ","e":"68 - LIVING BOTUCATU EMPREENDIMENTOS IMOBILIÁRIOS LTDA - RJ","si":-49202082,"sv":15001817,"dl":-9329107,"ml":-4.6444,"st":"VALIDADO"},{"p":"458 - MÉRITO ZONA NORTE - LIVING BOTUCATU - RJ","e":"68 - LIVING BOTUCATU EMPREENDIMENTOS IMOBILIÁRIOS LTDA - RJ","si":21316474,"sv":10447140,"dl":-10604174,"ml":0.3954,"st":"VALIDADO"},{"p":"438 - DEZ BONSUCESSO - CCISA24 - RJ","e":"72 - CCISA24 INCORPORADORA LTDA - RJ","si":8209883,"sv":13691643,"dl":-393492,"ml":0.1365,"st":"VALIDADO"},{"p":"314 - DEZ GAMELINHA - CCISA30 - SP","e":"92 - CCISA30 INCORPORADORA LTDA - SP","si":-47888956,"sv":27073452,"dl":-32349237,"ml":-0.6528,"st":"VALIDADO"},{"p":"392 - DEZ GAMELINHA 2 - CCISA30 - SP","e":"92 - CCISA30 INCORPORADORA LTDA - SP","si":-12037798,"sv":27073452,"dl":7620011,"ml":-0.1349,"st":"VALIDADO"},{"p":"341 - DEZ CURSINO - R023 OURIVES - SP","e":"103 - R023 OURIVES EMPREENDIMENTOS E PARTICIPAÇÕES LTDA - SP","si":1764398,"sv":15314475,"dl":-12133277,"ml":0.0605,"st":"VALIDADO"},{"p":"375 - DEZ OURIVES - R023 OURIVES - SP","e":"103 - R023 OURIVES EMPREENDIMENTOS E PARTICIPAÇÕES LTDA - SP","si":16968845,"sv":13907443,"dl":5274909,"ml":0.1973,"st":"VALIDADO"},{"p":"520 - DEZ CELESTE - R023 OURIVES - SP","e":"103 - R023 OURIVES EMPREENDIMENTOS E PARTICIPAÇÕES LTDA - SP","si":2069509,"sv":12987424,"dl":-6543408,"ml":0.0514,"st":"VALIDADO"},{"p":"371 - DEZ VILA DAS BELEZAS - CCISA45 - SP","e":"117 - CCISA45 INCORPORADORA LTDA - SP","si":-29043263,"sv":36023502,"dl":-28949941,"ml":-0.4405,"st":"VALIDADO"},{"p":"385 - DEZ VILA DAS BELEZAS 2 - CCISA45 - SP","e":"117 - CCISA45 INCORPORADORA LTDA - SP","si":-18325226,"sv":36023502,"dl":-19152914,"ml":-0.2579,"st":"VALIDADO"},{"p":"387 - ÚNICO SACOMÃ - CCISA46 - SP","e":"123 - CCISA46 INCORPORADORA LTDA - SP","si":26832799,"sv":29719340,"dl":-2098417,"ml":0.2298,"st":"VALIDADO"},{"p":"479 - YUNES PARK - CCISA48 - SP","e":"126 - CCISA48 INCORPORADORA LTDA - SP","si":-94928748,"sv":38567716,"dl":-47928596,"ml":251.9583,"st":"VALIDADO"},{"p":"480 - MY MIGUEL YUNES - CCISA48 - SP","e":"126 - CCISA48 INCORPORADORA LTDA - SP","si":29745143,"sv":33095558,"dl":-2717094,"ml":0.2409,"st":"VALIDADO"},{"p":"603 - LIBERTY MIGUEL YUNES - CCISA48 - SP","e":"126 - CCISA48 INCORPORADORA LTDA - SP","si":23504356,"sv":23794783,"dl":-4669375,"ml":0.2652,"st":"VALIDADO"},{"p":"604 - EXCLUSIVE MIGUEL YUNES - CCISA48 - SP","e":"126 - CCISA48 INCORPORADORA LTDA - SP","si":51846437,"sv":55368156,"dl":-4631307,"ml":0.2823,"st":"VALIDADO"},{"p":"393 - DEZ PARQUE DAS BANDEIRAS - CCISA50 - SP","e":"128 - CCISA50 INCORPORADORA LTDA - SP","si":11990444,"sv":16641248,"dl":-123059,"ml":0.1713,"st":"VALIDADO"},{"p":"397 - COMPLETO BONSUCESSO - CCISA51 - RJ","e":"129 - CCISA51 INCORPORADORA LTDA - RJ","si":9978860,"sv":16839570,"dl":-1395619,"ml":0.1409,"st":"VALIDADO"},{"p":"399 - ÚNICO PENHA - CCISA55 - SP","e":"133 - CCISA55 INCORPORADORA LTDA - SP","si":9174208,"sv":18434751,"dl":-4483863,"ml":0.1351,"st":"VALIDADO"},{"p":"401 - DEZ IPIRANGA - CCISA59 - SP","e":"135 - CCISA59 INCORPORADORA LTDA - SP","si":4489728,"sv":14994998,"dl":-5990175,"ml":0.0786,"st":"VALIDADO"},{"p":"483 - DEZ IPIRANGA 2 - CCISA59 - SP","e":"135 - CCISA59 INCORPORADORA LTDA - SP","si":11900711,"sv":15452264,"dl":3541003,"ml":0.1673,"st":"VALIDADO"},{"p":"402 - URBAN MOOCA - CCISA60 - SP","e":"136 - CCISA60 INCORPORADORA LTDA - SP","si":554526,"sv":20741242,"dl":-15588839,"ml":0.0262,"st":"VALIDADO"},{"p":"429 - URBAN MOOCA 2 - CCISA60 - SP","e":"136 - CCISA60 INCORPORADORA LTDA - SP","si":17951320,"sv":7049755,"dl":14186244,"ml":0.4847,"st":"VALIDADO"},{"p":"462 - URBAN SÃO CRISTÓVÃO - CCISA61 - RJ","e":"137 - CCISA61 INCORPORADORA LTDA - RJ","si":2230789,"sv":22014025,"dl":-13095475,"ml":0.0527,"st":"VALIDADO"},{"p":"410 - COMPLETO PIEDADE - PIEDADE - RJ","e":"141 - PIEDADE EMPREENDIMENTOS IMOBILIÁRIOS LTDA - RJ","si":1195031,"sv":12851965,"dl":-11231276,"ml":0.038,"st":"VALIDADO"},{"p":"412 - DEZ SÃO MIGUEL - CCISA54 - SP","e":"143 - CCISA54 INCORPORADORA LTDA - SP","si":-27907555,"sv":16141722,"dl":-2291971,"ml":-0.9298,"st":"VALIDADO"},{"p":"470 - DEZ NORDESTINA - CCISA54 - SP","e":"143 - CCISA54 INCORPORADORA LTDA - SP","si":-18928284,"sv":21003713,"dl":-6709921,"ml":-0.5165,"st":"VALIDADO"},{"p":"413 - URBAN BARRA FUNDA - CCISA62 - SP","e":"144 - CCISA62 INCORPORADORA LTDA - SP","si":2455451,"sv":18768588,"dl":-14685805,"ml":0.0522,"st":"VALIDADO"},{"p":"453 - URBAN BARRA FUNDA 2 - CCISA62 - SP","e":"144 - CCISA62 INCORPORADORA LTDA - SP","si":27617806,"sv":25430244,"dl":13593877,"ml":0.2408,"st":"VALIDADO"},{"p":"454 - FLOW BARRA FUNDA - CCISA62 - SP","e":"144 - CCISA62 INCORPORADORA LTDA - SP","si":11302571,"sv":17172133,"dl":2227632,"ml":0.1712,"st":"VALIDADO"},{"p":"455 - FLOW BARRA FUNDA 2 - CCISA62 - SP","e":"144 - CCISA62 INCORPORADORA LTDA - SP","si":11249167,"sv":14726170,"dl":3592079,"ml":0.1795,"st":"VALIDADO"},{"p":"414 - ÚNICO NOVA IGUAÇU - CCISA70 - RJ","e":"145 - CCISA70 INCORPORADORA LTDA - RJ","si":11742877,"sv":14790174,"dl":-3047297,"ml":0.169,"st":"VALIDADO"},{"p":"417 - URBAN PARQUE DAS BANDEIRAS - CCISA74 - SP","e":"147 - CCISA74 INCORPORADORA LTDA - SP","si":4441584,"sv":12376999,"dl":5090914,"ml":0.0766,"st":"VALIDADO"},{"p":"426 - DEZ TATUAPÉ - CCISA71 - SP","e":"151 - CCISA71 INCORPORADORA LTDA - SP","si":23841366,"sv":39450840,"dl":-5822344,"ml":0.1913,"st":"VALIDADO"},{"p":"440 - DEZ JARDIM - CCISA69 - SP","e":"153 - CCISA69 INCORPORADORA LTDA - SP","si":22398997,"sv":24147330,"dl":12026626,"ml":0.2269,"st":"VALIDADO"},{"p":"518 - MAXIMO JARDIM - CCISA69 - SP","e":"153 - CCISA69 INCORPORADORA LTDA - SP","si":24690523,"sv":26163438,"dl":5253837,"ml":0.2307,"st":"VALIDADO"},{"p":"621 - TUTTO JARDIM - CCISA69 - SP","e":"153 - CCISA69 INCORPORADORA LTDA - SP","si":7344752,"sv":7404910,"dl":3001397,"ml":0.1625,"st":"VALIDADO"},{"p":"441 - ALTO SÃO CRISTÓVÃO - CCISA78 - RJ","e":"154 - CCISA78 INCORPORADORA LTDA - RJ","si":3502807,"sv":11751966,"dl":-3686857,"ml":0.0738,"st":"VALIDADO"},{"p":"443 - ORLA RECREIO GRUMARI - CCISA67 - RJ","e":"155 - CCISA67 INCORPORADORA LTDA - RJ","si":2815115,"sv":13416852,"dl":-5296269,"ml":0.0565,"st":"VALIDADO"},{"p":"468 - ORLA RECREIO PRAINHA - CCISA67 - RJ","e":"155 - CCISA67 INCORPORADORA LTDA - RJ","si":15633892,"sv":16422569,"dl":-7905743,"ml":0.2285,"st":"VALIDADO"},{"p":"449 - DEZ RAMOS - CCISA64 - RJ","e":"156 - CCISA64 INCORPORADORA LTDA - RJ","si":9248751,"sv":12390350,"dl":-883492,"ml":0.1629,"st":"VALIDADO"},{"p":"450 - URBAN DOWNTOWN - CCISA75 - RJ","e":"157 - CCISA75 INCORPORADORA LTDA - RJ","si":11620934,"sv":16242760,"dl":-2209922,"ml":0.1526,"st":"VALIDADO"},{"p":"451 - DEZ CANINDÉ - CCISA76 - SP","e":"158 - CCISA76 INCORPORADORA LTDA - SP","si":30702930,"sv":34820579,"dl":3077065,"ml":0.2123,"st":"VALIDADO"},{"p":"452 - MÉRITO SABARÁ - CCISA79 - SP","e":"159 - CCISA79 INCORPORADORA LTDA - SP","si":54756910,"sv":54246200,"dl":6986494,"ml":0.2954,"st":"VALIDADO"},{"p":"456 - CIDADE MOOCA VILA CAPRI - CCISA66 - SP","e":"161 - CCISA66 INCORPORADORA LTDA - SP","si":26882321,"sv":35026064,"dl":12141796,"ml":0.2046,"st":"VALIDADO"},{"p":"494 - CIDADE MOOCA VILA PALERMO - CCISA66 - SP","e":"161 - CCISA66 INCORPORADORA LTDA - SP","si":39131544,"sv":43073232,"dl":-17889012,"ml":0.2969,"st":"VALIDADO"},{"p":"511 - CIDADE MOOCA VILA SARDENHA - CCISA66 - SP","e":"161 - CCISA66 INCORPORADORA LTDA - SP","si":21720167,"sv":24605597,"dl":4947928,"ml":0.2849,"st":"VALIDADO"},{"p":"459 - UNICO JACU PESSEGO - CCISA68 - SP","e":"162 - CCISA68 INCORPORADORA LTDA - SP","si":8418307,"sv":15495625,"dl":-3170702,"ml":0.1248,"st":"VALIDADO"},{"p":"460 - CIDADE JAGUARE VILA PINHEIROS - CCISA77 - SP","e":"163 - CCISA77 INCORPORADORA LTDA - SP","si":64197379,"sv":23231515,"dl":50378862,"ml":0.4098,"st":"VALIDADO"},{"p":"521 - CIDADE JAGUARE VILA MACKENZIE - CCISA77 - SP","e":"163 - CCISA77 INCORPORADORA LTDA - SP","si":27634088,"sv":28078929,"dl":-67985796,"ml":0.2314,"st":"VALIDADO"},{"p":"522 - CIDADE JAGUARE VILLA LOBOS - CCISA77 - SP","e":"163 - CCISA77 INCORPORADORA LTDA - SP","si":32165746,"sv":32184506,"dl":2940156,"ml":0.2471,"st":"VALIDADO"},{"p":"465 - URBAN TATUAPE - CCISA85 - SP","e":"165 - CCISA85 INCORPORADORA LTDA - SP","si":38014795,"sv":38131389,"dl":4926139,"ml":0.2402,"st":"VALIDADO"},{"p":"482 - RIO WONDER PRAIA FORMOSA - CCISA83 - RJ","e":"168 - CCISA83 INCORPORADORA LTDA - RJ","si":8796745,"sv":20487447,"dl":-10304380,"ml":0.1039,"st":"VALIDADO"},{"p":"528 - RIO WONDER MAUÁ - CCISA83 - RJ","e":"168 - CCISA83 INCORPORADORA LTDA - RJ","si":21260984,"sv":21376173,"dl":1906750,"ml":0.2407,"st":"VALIDADO"},{"p":"529 - RIO WONDER CAIS DO VALONGO - CCISA83 - RJ","e":"168 - CCISA83 INCORPORADORA LTDA - RJ","si":13087117,"sv":27639098,"dl":-5324884,"ml":0.169,"st":"VALIDADO"},{"p":"485 - UNICO SANTO ANDRE - CCISA87 - SP","e":"170 - CCISA87 INCORPORADORA LTDA - SP","si":24193558,"sv":25157723,"dl":-4262718,"ml":0.2614,"st":"VALIDADO"},{"p":"486 - MÉRITO VILA MARIA - CCISA89 - SP","e":"171 - CCISA89 INCORPORADORA LTDA - SP","si":12494422,"sv":26641872,"dl":-3734151,"ml":0.14,"st":"VALIDADO"},{"p":"492 - GUIDO PARQUE SANTO AMARO - CCISA80 - SP","e":"173 - CCISA80 INCORPORADORA LTDA - SP","si":35229796,"sv":35212630,"dl":15460534,"ml":0.2257,"st":"VALIDADO"},{"p":"491 - NORDESTINA SAO MIGUEL - CCISA88 - SP","e":"174 - CCISA88 INCORPORADORA LTDA - SP","si":16593474,"sv":17767752,"dl":34508870,"ml":0.2011,"st":"VALIDADO"},{"p":"519 - NORDESTINA SAO MIGUEL 2 - CCISA88 - SP","e":"174 - CCISA88 INCORPORADORA LTDA - SP","si":22411944,"sv":23675739,"dl":-8651698,"ml":0.2496,"st":"VALIDADO"},{"p":"532 - FLOW SANTA ROSA - CCISA97 - RJ","e":"176 - CCISA97 INCORPORADORA LTDA - RJ","si":13562266,"sv":14162007,"dl":-6376356,"ml":0.2092,"st":"VALIDADO"},{"p":"533 - UNICO BONSUCESSO - CCISA98 - RJ","e":"177 - CCISA98 INCORPORADORA LTDA - RJ","si":17146295,"sv":18404039,"dl":-36838555,"ml":0.1965,"st":"VALIDADO"},{"p":"538 - MY JACAREPAGUA STYLE - CCISA100 - RJ","e":"180 - CCISA100 INCORPORADORA LTDA - RJ","si":10254039,"sv":20951717,"dl":-26753351,"ml":0.1202,"st":"VALIDADO"},{"p":"542 - PATEO NAZARETH - CCISA116 - RJ","e":"183 - CCISA116 INCORPORADORA LTDA - RJ","si":68817574,"sv":70403647,"dl":-35042948,"ml":0.255,"st":"VALIDADO"},{"p":"543 - RIO ENERGY - CCISA112 - RJ","e":"184 - CCISA112 INCORPORADORA LTDA - RJ","si":52511689,"sv":53468085,"dl":-39735819,"ml":0.2221,"st":"VALIDADO"},{"p":"547 - GOLD LYNE PIRITUBA - CASAVIVA - SP","e":"186 - CASAVIVA ILHEUS EMPREENDIMENTOS IMOBILIARIOS LTDA - SP","si":10257811,"sv":21297867,"dl":1279618,"ml":0.1211,"st":"VALIDADO"},{"p":"548 - GREEN LYNE PIRITUBA - CASAVIVA - SP","e":"186 - CASAVIVA ILHEUS EMPREENDIMENTOS IMOBILIARIOS LTDA - SP","si":23047706,"sv":24275476,"dl":13103404,"ml":0.2253,"st":"VALIDADO"},{"p":"549 - BLUE LYNE PIRITUBA - CASAVIVA - SP","e":"186 - CASAVIVA ILHEUS EMPREENDIMENTOS IMOBILIARIOS LTDA - SP","si":38225632,"sv":23399580,"dl":18656827,"ml":0.3263,"st":"VALIDADO"},{"p":"550 - SILVER LYNE PIRITUBA - CASAVIVA - SP","e":"186 - CASAVIVA ILHEUS EMPREENDIMENTOS IMOBILIARIOS LTDA - SP","si":22843871,"sv":26139327,"dl":-10473021,"ml":0.1896,"st":"VALIDADO"},{"p":"553 - MAXIMO BUTANTA - CCISA93 - SP","e":"189 - CCISA93 INCORPORADORA LTDA - SP","si":17078747,"sv":20000133,"dl":-9651726,"ml":0.2126,"st":"VALIDADO"},{"p":"557 - ELO SANTO ANDRE - CCISA107 - SP","e":"193 - CCISA107 INCORPORADORA LTDA - SP","si":33597842,"sv":35512526,"dl":-1551502,"ml":0.2089,"st":"VALIDADO"},{"p":"558 - ENERGY GUARULHOS - CCISA108 - SP","e":"194 - CCISA108 INCORPORADORA LTDA - SP","si":38508215,"sv":38387348,"dl":7330959,"ml":0.2461,"st":"VALIDADO"},{"p":"570 - CURY SQUARE PANAMBY ITAPAIUNA - CCISA118 - SP","e":"206 - CCISA118 INCORPORADORA LTDA - SP","si":42874056,"sv":43578557,"dl":-46035404,"ml":0.2714,"st":"VALIDADO"},{"p":"617 - CURY SQUARE PANAMBY GIOVANNI GRONCHI - CCISA118 - SP","e":"206 - CCISA118 INCORPORADORA LTDA - SP","si":39442642,"sv":41130844,"dl":35246392,"ml":0.2565,"st":"VALIDADO"},{"p":"618 - CURY SQUARE PANAMBY CONDOMINIO UNIQ - CCISA118 - SP","e":"206 - CCISA118 INCORPORADORA LTDA - SP","si":61927190,"sv":61653848,"dl":-1019251,"ml":0.253,"st":"VALIDADO"},{"p":"572 - CONNECT SAO MATEUS 2 - CCISA120 - SP","e":"208 - CCISA120 INCORPORADORA LTDA - SP","si":36778165,"sv":41104234,"dl":7115917,"ml":0.2396,"st":"VALIDADO"},{"p":"616 - CONNECT SAO MATEUS - CCISA120 - SP","e":"208 - CCISA120 INCORPORADORA LTDA - SP","si":29639593,"sv":30943341,"dl":-17484819,"ml":0.2691,"st":"VALIDADO"},{"p":"574 - AR.QUE ARQUITETURA QUE RESPIRA - CCISA122 - SP","e":"210 - CCISA122 INCORPORADORA LTDA - SP","si":28864864,"sv":29872235,"dl":-11084648,"ml":0.2241,"st":"VALIDADO"},{"p":"591 - CONNECT BONSUCESSO - CCISA139 - RJ","e":"227 - CCISA139 INCORPORADORA LTDA - RJ","si":21897484,"sv":22201623,"dl":-8774033,"ml":0.2131,"st":"VALIDADO"},{"p":"592 - VARGAS 1140 RESIDENCIAL - CCISA140 - RJ","e":"228 - CCISA140 INCORPORADORA LTDA - RJ","si":23146034,"sv":24637118,"dl":-29019241,"ml":0.215,"st":"VALIDADO"},{"p":"593 - BAIA GUANABARA RESIDENCES - CCISA141 - RJ","e":"229 - CCISA141 INCORPORADORA LTDA - RJ","si":34792766,"sv":37583976,"dl":-7033656,"ml":0.2262,"st":"VALIDADO"},{"p":"594 - RIO BRANCO 220 - CCISA142 - RJ","e":"230 - CCISA142 INCORPORADORA LTDA - RJ","si":52448510,"sv":53825921,"dl":-4040063,"ml":0.234,"st":"VALIDADO"},{"p":"623 - EPICENTRO - CCISA143 - RJ","e":"235 - CCISA143 INCORPORADORA LTDA - RJ","si":82579284,"sv":82894904,"dl":4875204,"ml":0.2502,"st":"VALIDADO"},{"p":"642 - TRENDY CACHAMBI - CCISA162 - RJ","e":"254 - CCISA162 INCORPORADORA LTDA - RJ","si":37367755,"sv":38811002,"dl":-25554761,"ml":0.2386,"st":"VALIDADO"}];
+var RAN = [{"d":"01/03/2023","real":115334930,"proj":0},{"d":"01/04/2023","real":21549067,"proj":0},{"d":"01/05/2023","real":52235276,"proj":0},{"d":"01/06/2023","real":77323790,"proj":0},{"d":"01/07/2023","real":10444794,"proj":0},{"d":"01/08/2023","real":44038148,"proj":0},{"d":"01/09/2023","real":110025386,"proj":0},{"d":"01/10/2023","real":16203861,"proj":0},{"d":"01/11/2023","real":61578235,"proj":0},{"d":"01/12/2023","real":179903564,"proj":0},{"d":"01/01/2024","real":-30591742,"proj":0},{"d":"01/02/2024","real":53212160,"proj":0},{"d":"01/03/2024","real":0,"proj":-540094250},{"d":"01/04/2024","real":0,"proj":96003249},{"d":"01/05/2024","real":0,"proj":100336766},{"d":"01/06/2024","real":0,"proj":87877260},{"d":"01/07/2024","real":0,"proj":129870911},{"d":"01/08/2024","real":0,"proj":79199610},{"d":"01/09/2024","real":0,"proj":21911157},{"d":"01/10/2024","real":0,"proj":50436642},{"d":"01/11/2024","real":0,"proj":42987846},{"d":"01/12/2024","real":0,"proj":102289450},{"d":"01/01/2025","real":0,"proj":25252803},{"d":"01/02/2025","real":0,"proj":25156162}];
+var TKR = [{"p":"521 - CIDADE JAGUARE VILA MACKENZIE - CCISA77 - SP","dl":-67985796},{"p":"460 - CIDADE JAGUARE VILA PINHEIROS - CCISA77 - SP","dl":50378862},{"p":"479 - YUNES PARK - CCISA48 - SP","dl":-47928596},{"p":"570 - CURY SQUARE PANAMBY ITAPAIUNA - CCISA118 - SP","dl":-46035404},{"p":"543 - RIO ENERGY - CCISA112 - RJ","dl":-39735819},{"p":"533 - UNICO BONSUCESSO - CCISA98 - RJ","dl":-36838555},{"p":"617 - CURY SQUARE PANAMBY GIOVANNI GRONCHI - CCISA118 - SP","dl":35246392},{"p":"542 - PATEO NAZARETH - CCISA116 - RJ","dl":-35042948},{"p":"491 - NORDESTINA SAO MIGUEL - CCISA88 - SP","dl":34508870},{"p":"314 - DEZ GAMELINHA - CCISA30 - SP","dl":-32349237},{"p":"592 - VARGAS 1140 RESIDENCIAL - CCISA140 - RJ","dl":-29019241},{"p":"371 - DEZ VILA DAS BELEZAS - CCISA45 - SP","dl":-28949941}];
+
+/* ============================== UTILS ================================ */
+var Utils = (function(){
+  function s(v){ return (v===null||v===undefined) ? "" : String(v); }
+  function n(v){ var x = parseFloat(v); return isNaN(x) ? 0 : x; }
+  function norm(v){ return s(v).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+  function percValue(v){ var x = n(v); return Math.abs(x) < 1 ? x*100 : x; }
+  function parseYM(d){ var p = s(d).split("/"); return p.length===3 ? (p[2]+"-"+p[1]) : ""; }
+  function monthLabel(ym){
+    var meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+    var parts = ym.split("-");
+    if(parts.length!==2) return ym;
+    var idx = parseInt(parts[1],10)-1;
+    return (meses[idx]||parts[1])+"/"+parts[0].slice(2);
+  }
+  function fmtBRL(v){
+    var x = n(v); var neg = x<0; x = Math.abs(x);
+    var t = Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");
+    return (neg?"\u2212":"")+"R$ "+t;
+  }
+  function fmtBRLk(v){
+    var x = n(v); var abs = Math.abs(x);
+    if(abs>=1000000) return (x/1000000).toFixed(1).replace(".",",")+"M";
+    if(abs>=1000) return (x/1000).toFixed(0)+"k";
+    return Math.round(x).toString();
+  }
+  function fmtPct(v){ return percValue(v).toFixed(1).replace(".",",")+"%"; }
+  function escapeHtml(v){
+    var APOS = String.fromCharCode(39);
+    var map = {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"};
+    map[APOS] = "&#39;";
+    var re = new RegExp("[&<>\"" + APOS + "]", "g");
+    return s(v).replace(re, function(c){ return map[c]; });
+  }
+  function debounce(fn, wait){
+    var t;
+    return function(){
+      var ctx=this, args=arguments;
+      clearTimeout(t);
+      t = setTimeout(function(){ fn.apply(ctx,args); }, wait);
+    };
+  }
+  return {s:s,n:n,norm:norm,percValue:percValue,parseYM:parseYM,monthLabel:monthLabel,
+          fmtBRL:fmtBRL,fmtBRLk:fmtBRLk,fmtPct:fmtPct,escapeHtml:escapeHtml,debounce:debounce};
+})();
+
+/* ============================== THEME ================================ */
+/* Tema padrao = CLARO (light). O usuario pode alternar para ESCURO (dark)
+   pelo botao no cabecalho; a preferencia so muda enquanto a pagina estiver
+   aberta (nao ha "modo automatico" - evita depender de prefers-color-scheme,
+   que se comporta de forma inconsistente dentro do WebView do Power BI). */
+var Theme = (function(){
+  var ORDER = ["light","dark"];
+  var LABELS = {light:"claro", dark:"escuro"};
+  var ICONS = {
+    light: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/></svg>",
+    dark: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z\"/></svg>"
+  };
+  var current = "light";
+  function apply(t){
+    current = t;
+    document.documentElement.setAttribute("data-theme", t);
+    var btn = document.getElementById("themeToggle");
+    if(btn){
+      btn.innerHTML = ICONS[t];
+      btn.setAttribute("aria-label", "Alternar tema (" + LABELS[t] + ")");
+    }
+  }
+  function toggle(){
+    var idx = ORDER.indexOf(current);
+    apply(ORDER[(idx+1)%ORDER.length]);
+    Charts.refreshTheme();
+  }
+  function init(){ apply("light"); }
+  return {init:init, toggle:toggle, current:function(){return current;}};
+})();
+
+/* ============================== TOOLTIP =============================== */
+var Tooltip = (function(){
+  var el;
+  function ensure(){ if(!el) el = document.getElementById("tooltip"); return el; }
+  function position(x,y){
+    var t = ensure();
+    var pad = 14;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var w = t.offsetWidth, h = t.offsetHeight;
+    var left = x + 16, top = y + 16;
+    if(left + w + pad > vw) left = x - w - 16;
+    if(top + h + pad > vh) top = y - h - 16;
+    if(left < pad) left = pad;
+    if(top < pad) top = pad;
+    t.style.left = left + "px";
+    t.style.top = top + "px";
+  }
+  function show(x, y, html){
+    var t = ensure();
+    t.innerHTML = html;
+    t.classList.add("show");
+    position(x,y);
+  }
+  function hide(){ var t = ensure(); t.classList.remove("show"); }
+  function sparkSvg(values, color){
+    if(!values.length) return "";
+    var w=180,h=34,max=Math.max.apply(null,values.concat([0])),min=Math.min.apply(null,values.concat([0]));
+    var range = (max-min)||1;
+    var step = w/(values.length-1||1);
+    var pts = values.map(function(v,i){ return (i*step).toFixed(1)+","+(h-((v-min)/range)*h).toFixed(1); }).join(" ");
+    return "<svg class=\"tt-spark\" viewBox=\"0 0 "+w+" "+h+"\" width=\"100%\" height=\"34\" preserveAspectRatio=\"none\" aria-hidden=\"true\">"+
+      "<polyline points=\""+pts+"\" fill=\"none\" stroke=\""+color+"\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>";
+  }
+  function bindDelegated(container, selector, buildHtml){
+    if(!container) return;
+    container.addEventListener("mouseover", function(e){
+      var target = e.target.closest(selector);
+      if(!target || !container.contains(target)) return;
+      var html = buildHtml(target);
+      if(html) show(e.clientX, e.clientY, html);
+    });
+    container.addEventListener("mousemove", function(e){
+      var target = e.target.closest(selector);
+      if(!target) return;
+      if(ensure().classList.contains("show")) position(e.clientX, e.clientY);
+    });
+    container.addEventListener("mouseout", function(e){
+      var target = e.target.closest(selector);
+      if(!target) return;
+      if(e.relatedTarget && target.contains(e.relatedTarget)) return;
+      hide();
+    });
+  }
+  return {show:show,hide:hide,sparkSvg:sparkSvg,bindDelegated:bindDelegated};
+})();
+
+/* ============================== COMBO =================================== */
+/* Combobox pesquisavel: substitui o <select> nativo por um botao + painel
+   com campo de busca, permitindo filtrar os itens da lista digitando.
+   Usado pelos filtros Empresa, Projeto e Mes de referencia. */
+var Combo = (function(){
+  function create(opts){
+    var btn = document.getElementById(opts.btnId);
+    var panel = document.getElementById(opts.panelId);
+    var search = document.getElementById(opts.searchId);
+    var list = document.getElementById(opts.listId);
+    var wrap = btn.closest(".combo");
+    var state = { options: [], value: "__all__" };
+
+    function renderList(filterText){
+      var q = Utils.norm(filterText||"");
+      var items = [{value:"__all__", label:opts.allLabel}].concat(state.options);
+      var matched = items.filter(function(it){ return q==="" || Utils.norm(it.label).indexOf(q)!==-1; });
+      list.innerHTML = "";
+      if(!matched.length){
+        var empty = document.createElement("div");
+        empty.className = "combo-empty";
+        empty.textContent = "Nenhum resultado";
+        list.appendChild(empty);
+        return;
+      }
+      var frag = document.createDocumentFragment();
+      matched.forEach(function(it){
+        var li = document.createElement("li");
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "combo-option";
+        b.setAttribute("role","option");
+        b.setAttribute("aria-selected", String(it.value===state.value));
+        b.textContent = it.label;
+        b.addEventListener("click", function(){ selectValue(it.value, it.label); });
+        li.appendChild(b);
+        frag.appendChild(li);
+      });
+      list.appendChild(frag);
+    }
+
+    function selectValue(value, label){
+      state.value = value;
+      btn.textContent = label;
+      close();
+      opts.onSelect(value);
+    }
+
+    function open(){
+      panel.hidden = false;
+      wrap.classList.add("open");
+      btn.setAttribute("aria-expanded","true");
+      search.value = "";
+      renderList("");
+      search.focus();
+    }
+    function close(){
+      panel.hidden = true;
+      wrap.classList.remove("open");
+      btn.setAttribute("aria-expanded","false");
+    }
+
+    btn.addEventListener("click", function(e){
+      e.stopPropagation();
+      panel.hidden ? open() : close();
+    });
+    search.addEventListener("input", function(){ renderList(search.value); });
+    search.addEventListener("keydown", function(e){
+      if(e.key==="Escape"){ close(); btn.focus(); }
+      else if(e.key==="Enter"){
+        var first = list.querySelector(".combo-option");
+        if(first) first.click();
+      }
+    });
+    document.addEventListener("click", function(e){
+      if(panel.hidden) return;
+      if(!panel.contains(e.target) && e.target!==btn) close();
+    });
+    document.addEventListener("keydown", function(e){
+      if(e.key==="Escape" && !panel.hidden) close();
+    });
+
+    return {
+      setOptions: function(options){ state.options = options; },
+      setValue: function(value, label){ state.value = value; btn.textContent = label; }
+    };
+  }
+  return { create: create };
+})();
+
+/* ============================== FILTERS =============================== */
+var Filters = (function(){
+  var state = { q:"", empresa:"__all__", projeto:"__all__", mes:"__all__", sortKey:"dl", sortDir:"desc", page:1, pageSize:10 };
+  var comboEmpresa, comboProjeto, comboMes;
+
+  function monthsList(){
+    var set = {};
+    RAN.forEach(function(r){ set[Utils.parseYM(r.d)] = true; });
+    return Object.keys(set).sort();
+  }
+
+  function empresaOptions(){
+    var empresas = [];
+    PRJ.forEach(function(p){ if(empresas.indexOf(p.e)===-1) empresas.push(p.e); });
+    empresas.sort();
+    return empresas.map(function(e){ return {value:e, label:e}; });
+  }
+
+  /* Lista de projetos depende da empresa selecionada (filtro em cascata). */
+  function projetoOptions(){
+    var nomes = [];
+    PRJ.forEach(function(p){
+      if(state.empresa!=="__all__" && p.e!==state.empresa) return;
+      if(nomes.indexOf(p.p)===-1) nomes.push(p.p);
+    });
+    nomes.sort();
+    return nomes.map(function(p){ return {value:p, label:p}; });
+  }
+
+  function monthOptions(){
+    return monthsList().map(function(ym){ return {value:ym, label:Utils.monthLabel(ym)}; });
+  }
+
+  function populateSelects(){
+    comboEmpresa = Combo.create({
+      btnId:"fEmpresaBtn", panelId:"fEmpresaPanel", searchId:"fEmpresaSearch", listId:"fEmpresaList",
+      allLabel:"Todas as empresas",
+      onSelect:function(value){
+        state.empresa = value;
+        comboProjeto.setOptions(projetoOptions());
+        comboProjeto.setValue("__all__","Todos os projetos");
+        state.projeto = "__all__";
+        apply();
+      }
+    });
+    comboEmpresa.setOptions(empresaOptions());
+
+    comboProjeto = Combo.create({
+      btnId:"fProjetoBtn", panelId:"fProjetoPanel", searchId:"fProjetoSearch", listId:"fProjetoList",
+      allLabel:"Todos os projetos",
+      onSelect:function(value){ state.projeto = value; apply(); }
+    });
+    comboProjeto.setOptions(projetoOptions());
+
+    comboMes = Combo.create({
+      btnId:"fMesBtn", panelId:"fMesPanel", searchId:"fMesSearch", listId:"fMesList",
+      allLabel:"Todos os meses",
+      onSelect:function(value){ state.mes = value; apply(); }
+    });
+    comboMes.setOptions(monthOptions());
+  }
+
+  function currentFiltered(){
+    var q = Utils.norm(state.q);
+    return PRJ.filter(function(p){
+      var okQ = q==="" || Utils.norm(p.p).indexOf(q)!==-1 || Utils.norm(p.e).indexOf(q)!==-1;
+      var okE = state.empresa==="__all__" || p.e===state.empresa;
+      var okP = state.projeto==="__all__" || p.p===state.projeto;
+      return okQ && okE && okP;
+    });
+  }
+
+  function sorted(list){
+    var key = state.sortKey, dir = state.sortDir==="asc"?1:-1;
+    return list.slice().sort(function(a,b){
+      var va=a[key], vb=b[key];
+      if(typeof va === "string"){ va=Utils.norm(va); vb=Utils.norm(vb); }
+      if(va<vb) return -1*dir;
+      if(va>vb) return 1*dir;
+      return 0;
+    });
+  }
+
+  function ranFiltered(){
+    if(state.mes==="__all__") return RAN;
+    return RAN.filter(function(r){ return Utils.parseYM(r.d)===state.mes; });
+  }
+
+  function apply(){
+    state.page = 1;
+    Main.refresh();
+  }
+
+  function reset(){
+    state.q=""; state.empresa="__all__"; state.projeto="__all__"; state.mes="__all__";
+    document.getElementById("globalSearch").value="";
+    comboEmpresa.setValue("__all__","Todas as empresas");
+    comboProjeto.setOptions(projetoOptions());
+    comboProjeto.setValue("__all__","Todos os projetos");
+    comboMes.setValue("__all__","Todos os meses");
+    apply();
+  }
+
+  return {state:state, populateSelects:populateSelects, currentFiltered:currentFiltered,
+          sorted:sorted, ranFiltered:ranFiltered, apply:apply, reset:reset};
+})();
+
+/* ============================== CHARTS ================================ */
+var Charts = (function(){
+  var STCOLOR = { VALIDADO:"--success", PENDENTE:"--warning", NENHUM:"--neutral" };
+  var C = {}; /* cache of resolved theme colors, refreshed on theme change only */
+
+  function readVar(name){
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function refreshTheme(){
+    C.border = readVar("--border");
+    C.primary = readVar("--primary");
+    C.primary2 = readVar("--primary-2");
+    C.warning = readVar("--warning");
+    C.textTertiary = readVar("--text-tertiary");
+    C.status = {};
+    Object.keys(STCOLOR).forEach(function(k){ C.status[k] = readVar(STCOLOR[k]); });
+    Main.refresh();
+  }
+
+  function donut(data){
+    var counts = {};
+    data.forEach(function(p){ counts[p.st] = (counts[p.st]||0)+1; });
+    var total = data.length || 1;
+    var cx=70, cy=70, r=54, sw=18, circ=2*Math.PI*r;
+    var svg = document.getElementById("donutSvg");
+    var parts = ["<circle cx=\""+cx+"\" cy=\""+cy+"\" r=\""+r+"\" fill=\"none\" stroke=\""+C.border+"\" stroke-width=\""+sw+"\"/>"];
+    var offset = 0;
+    var keys = Object.keys(counts);
+    keys.forEach(function(k){
+      var frac = counts[k]/total;
+      var len = frac*circ;
+      var col = C.status[k] || C.primary;
+      parts.push("<circle class=\"donut-seg\" cx=\""+cx+"\" cy=\""+cy+"\" r=\""+r+"\" fill=\"none\" stroke=\""+col+"\" stroke-width=\""+sw+"\" stroke-linecap=\"butt\" stroke-dasharray=\""+len.toFixed(2)+" "+(circ-len).toFixed(2)+"\" stroke-dashoffset=\""+(-offset).toFixed(2)+"\" transform=\"rotate(-90 "+cx+" "+cy+")\" style=\"transition:stroke-dasharray .5s ease\"/>");
+      offset += len;
+    });
+    parts.push("<text x=\""+cx+"\" y=\""+(cy-3)+"\" text-anchor=\"middle\" class=\"donut-center-label\">"+data.length+"</text>");
+    parts.push("<text x=\""+cx+"\" y=\""+(cy+11)+"\" text-anchor=\"middle\" class=\"donut-center-sub\">PROJETOS</text>");
+    svg.innerHTML = parts.join("");
+    document.getElementById("donutTotal").textContent = data.length+" no filtro";
+
+    var leg = document.getElementById("donutLegend");
+    var frag = document.createDocumentFragment();
+    keys.sort(function(a,b){ return counts[b]-counts[a]; }).forEach(function(k){
+      var row = document.createElement("div");
+      row.className = "legend-row";
+      row.setAttribute("data-tooltip-status", k);
+      var dot = document.createElement("span"); dot.className="legend-dot"; dot.style.background = C.status[k]||C.primary;
+      var name = document.createElement("span"); name.className="legend-name"; name.textContent=k;
+      var val = document.createElement("span"); val.className="legend-val num"; val.textContent = counts[k]+" ("+Math.round(counts[k]/total*100)+"%)";
+      row.appendChild(dot); row.appendChild(name); row.appendChild(val);
+      frag.appendChild(row);
+    });
+    leg.innerHTML = "";
+    leg.appendChild(frag);
+  }
+
+  function bars(ranData){
+    var svg = document.getElementById("barsSvg");
+    var W=900, H=220, padL=8, padR=8, padB=26, padT=10;
+    var innerW = W-padL-padR, innerH = H-padT-padB;
+    var n = ranData.length || 1;
+    var slot = innerW/n;
+    var barW = Math.min(20, slot*0.42);
+    var maxV = 0;
+    ranData.forEach(function(r){ maxV = Math.max(maxV, Math.abs(r.real), Math.abs(r.proj)); });
+    if(maxV===0) maxV = 1;
+    var zeroY = padT + innerH*0.82;
+    var scale = (innerH*0.78)/maxV;
+    var labelEvery = n > 18 ? 3 : (n > 10 ? 2 : 1);
+    var parts = [];
+    parts.push("<line x1=\""+padL+"\" y1=\""+zeroY+"\" x2=\""+(W-padR)+"\" y2=\""+zeroY+"\" stroke=\""+C.textTertiary+"\" stroke-opacity=\"0.3\"/>");
+    var trendPts = [];
+    ranData.forEach(function(r,i){
+      var x0 = padL + i*slot + (slot-barW)/2;
+      var val = r.real!==0 ? r.real : r.proj;
+      var h = Math.abs(val)*scale;
+      var y = val>=0 ? zeroY-h : zeroY;
+      var col = r.real!==0 ? C.primary : C.primary2;
+      var ym = Utils.parseYM(r.d);
+      parts.push("<rect class=\"bar-rect\" data-tooltip-bar=\""+i+"\" x=\""+x0.toFixed(1)+"\" y=\""+y.toFixed(1)+"\" width=\""+barW.toFixed(1)+"\" height=\""+Math.max(h,2).toFixed(1)+"\" rx=\"3\" fill=\""+col+"\"/>");
+      if(i%labelEvery===0){
+        parts.push("<text x=\""+(x0+barW/2).toFixed(1)+"\" y=\""+(H-8)+"\" text-anchor=\"middle\" font-size=\"10\" fill=\""+C.textTertiary+"\">"+Utils.monthLabel(ym)+"</text>");
+      }
+      trendPts.push((x0+barW/2).toFixed(1)+","+(val>=0?y:zeroY+h).toFixed(1));
+    });
+    parts.push("<polyline points=\""+trendPts.join(" ")+"\" fill=\"none\" stroke=\""+C.warning+"\" stroke-width=\"1.6\" stroke-dasharray=\"4 3\" opacity=\"0.9\"/>");
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+    svg.innerHTML = parts.join("");
+  }
+
+  function sparkline(values, color){
+    if(!values.length) return "";
+    var w=84,h=30,max=Math.max.apply(null,values.concat([0])),min=Math.min.apply(null,values.concat([0]));
+    var range=(max-min)||1, step=w/(values.length-1||1);
+    var pts = values.map(function(v,i){ return (i*step).toFixed(1)+","+(h-((v-min)/range)*h).toFixed(1); }).join(" ");
+    var last = values[values.length-1];
+    var lastX = ((values.length-1)*step).toFixed(1);
+    var lastY = (h-((last-min)/range)*h).toFixed(1);
+    return "<svg class=\"kpi-spark\" viewBox=\"0 0 "+w+" "+h+"\" preserveAspectRatio=\"none\" aria-hidden=\"true\">"+
+      "<polyline points=\""+pts+"\" fill=\"none\" stroke=\""+color+"\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"+
+      "<circle cx=\""+lastX+"\" cy=\""+lastY+"\" r=\"2.4\" fill=\""+color+"\"/></svg>";
+  }
+
+  return {donut:donut, bars:bars, sparkline:sparkline, refreshTheme:refreshTheme, colors:function(){return C;}};
+})();
+
+/* ============================== TABLE ================================= */
+var Table = (function(){
+  function row(p){
+    var dlCls = p.dl>=0 ? "cell-up":"cell-dn";
+    return "<tr data-tooltip-row=\"1\" data-p=\""+Utils.escapeHtml(p.p)+"\">"+
+      "<td><span class=\"proj-name\">"+Utils.escapeHtml(p.p)+"</span></td>"+
+      "<td>"+Utils.escapeHtml(p.e)+"</td>"+
+      "<td class=\"num\">"+Utils.fmtBRL(p.si)+"</td>"+
+      "<td class=\"num\">"+Utils.fmtBRL(p.sv)+"</td>"+
+      "<td class=\"num "+dlCls+"\">"+Utils.fmtBRL(p.dl)+"</td>"+
+      "<td class=\"num\">"+Utils.fmtPct(p.ml)+"</td>"+
+      "</tr>";
+  }
+  function render(list){
+    var st = Filters.state;
+    var totalPages = Math.max(1, Math.ceil(list.length/st.pageSize));
+    if(st.page>totalPages) st.page = totalPages;
+    var start = (st.page-1)*st.pageSize;
+    var pageItems = list.slice(start, start+st.pageSize);
+    var body = document.getElementById("tblBody");
+    body.innerHTML = pageItems.length
+      ? pageItems.map(row).join("")
+      : "<tr class=\"empty-row\"><td colspan=\"6\">Nenhum projeto encontrado para os filtros atuais.</td></tr>";
+    document.getElementById("pagInfo").textContent = "P\u00e1gina "+st.page+" de "+totalPages;
+    document.getElementById("btnPrev").disabled = st.page<=1;
+    document.getElementById("btnNext").disabled = st.page>=totalPages;
+    document.getElementById("tableCount").textContent = list.length+" projeto(s)";
+    document.querySelectorAll("#dataTable thead th").forEach(function(th){
+      var isSorted = th.getAttribute("data-key")===st.sortKey;
+      th.classList.toggle("sorted", isSorted);
+      var ind = th.querySelector(".sort-ind");
+      if(ind) ind.innerHTML = (isSorted && st.sortDir==="asc") ? "&#9650;" : "&#9660;";
+      th.setAttribute("aria-sort", isSorted ? (st.sortDir==="asc" ? "ascending" : "descending") : "none");
+    });
+    var live = document.getElementById("liveRegion");
+    if(live) live.textContent = list.length+" projeto(s) encontrado(s).";
+  }
+  function toggleSort(key){
+    var st = Filters.state;
+    if(st.sortKey===key){ st.sortDir = st.sortDir==="asc"?"desc":"asc"; }
+    else { st.sortKey = key; st.sortDir = (key==="p"||key==="e") ? "asc":"desc"; }
+    Main.refresh();
+  }
+  function bindEvents(){
+    var thead = document.querySelector("#dataTable thead");
+    thead.addEventListener("click", function(e){
+      var th = e.target.closest("th[data-key]");
+      if(th) toggleSort(th.getAttribute("data-key"));
+    });
+    thead.addEventListener("keydown", function(e){
+      if(e.key!=="Enter" && e.key!==" ") return;
+      var th = e.target.closest("th[data-key]");
+      if(!th) return;
+      e.preventDefault();
+      toggleSort(th.getAttribute("data-key"));
+    });
+    document.getElementById("btnPrev").addEventListener("click", function(){
+      if(Filters.state.page>1){ Filters.state.page--; Main.refresh(); }
+    });
+    document.getElementById("btnNext").addEventListener("click", function(){
+      Filters.state.page++; Main.refresh();
+    });
+  }
+  return {render:render, bindEvents:bindEvents};
+})();
+
+/* ============================== KPIs =================================== */
+var Kpis = (function(){
+  var ICONS = {
+    money: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v10M9.5 9.5c0-1.4 1.2-2.5 2.5-2.5s2.5 .9 2.5 2c0 3-5 1.5-5 4.5 0 1.1 1.2 2 2.5 2s2.5-1.1 2.5-2.5\"/></svg>",
+    target: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/></svg>",
+    trend: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 17l6-6 4 4 8-9\"/><path d=\"M15 6h6v6\"/></svg>",
+    building: "<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"1\"/><path d=\"M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1\"/></svg>"
+  };
+  var defs = [
+    {id:"si", icon:"money", cls:"blue", label:"Saldo Incorrido"},
+    {id:"sv", icon:"target", cls:"purple", label:"Saldo Viabilidade"},
+    {id:"dl", icon:"trend", cls:"green", label:"Delta Incorrido x Via"},
+    {id:"ct", icon:"building", cls:"blue", label:"Projetos no Filtro"}
+  ];
+  function ensureCards(){
+    var grid = document.getElementById("kpiGrid");
+    if(grid.children.length) return;
+    var frag = document.createDocumentFragment();
+    defs.forEach(function(d){
+      var card = document.createElement("div");
+      card.className = "kpi-card glass";
+      card.setAttribute("data-tooltip-kpi", d.id);
+      card.innerHTML =
+        "<div class=\"kpi-top\"><div class=\"kpi-icon "+d.cls+"\">"+ICONS[d.icon]+"</div></div>"+
+        "<div class=\"kpi-label\">"+d.label+"</div>"+
+        "<div class=\"kpi-value num\" id=\"kpi-"+d.id+"-value\">&mdash;</div>"+
+        "<div class=\"kpi-sub\" id=\"kpi-"+d.id+"-sub\"></div>";
+      frag.appendChild(card);
+    });
+    grid.appendChild(frag);
+  }
+  function chip(delta){
+    var up = delta>=0;
+    var arrow = up ? "<path d=\"M12 19V5M5 12l7-7 7 7\"/>" : "<path d=\"M12 5v14M5 12l7 7 7-7\"/>";
+    return "<span class=\"chip "+(up?"up":"dn")+"\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\">"+arrow+"</svg>"+Utils.fmtBRLk(Math.abs(delta))+"</span>";
+  }
+  function render(list){
+    ensureCards();
+    var si=0, sv=0, dl=0, validados=0;
+    list.forEach(function(p){ si+=p.si; sv+=p.sv; dl+=p.dl; if(p.st==="VALIDADO") validados++; });
+    var C = Charts.colors();
+
+    document.getElementById("kpi-si-value").textContent = Utils.fmtBRL(si);
+    document.getElementById("kpi-si-sub").textContent = list.length+" projeto(s) no filtro";
+
+    document.getElementById("kpi-sv-value").textContent = Utils.fmtBRL(sv);
+    document.getElementById("kpi-sv-sub").textContent = "Base de viabilidade original";
+
+    document.getElementById("kpi-dl-value").textContent = Utils.fmtBRL(dl);
+    document.getElementById("kpi-dl-sub").innerHTML = chip(dl) + " " + (dl>=0?"acima":"abaixo") + " da viabilidade";
+
+    document.getElementById("kpi-ct-value").textContent = list.length;
+    document.getElementById("kpi-ct-sub").textContent = validados+" validado(s) \u00b7 "+(list.length-validados)+" outro(s)";
+
+    document.querySelectorAll("#kpiGrid .kpi-spark").forEach(function(el){ el.remove(); });
+    var realSeries = RAN.map(function(r){ return r.real!==0? r.real : r.proj; });
+    var projSeries = RAN.map(function(r){ return r.proj; });
+    var deltaSeries = RAN.map(function(r){ return r.real - r.proj; });
+    var validBuckets = [];
+    var step = Math.max(1, Math.floor(PRJ.length/12));
+    for(var i=0;i<PRJ.length;i+=step){ validBuckets.push(PRJ.slice(i,i+step).filter(function(p){return p.st==="VALIDADO";}).length); }
+
+    document.querySelectorAll("#kpiGrid .kpi-card").forEach(function(card, idx){
+      var el;
+      if(idx===0) el = Charts.sparkline(realSeries, C.primary);
+      else if(idx===1) el = Charts.sparkline(projSeries, C.primary2);
+      else if(idx===2) el = Charts.sparkline(deltaSeries, dl>=0?C.status.VALIDADO:C.status.PENDENTE);
+      else el = Charts.sparkline(validBuckets, C.primary);
+      card.insertAdjacentHTML("beforeend", el);
+    });
+  }
+  return {render:render};
+})();
+
+/* ============================== TICKER ================================= */
+var Ticker = (function(){
+  function render(){
+    var sortedList = TKR.slice().sort(function(a,b){ return b.dl-a.dl; });
+    var html = sortedList.map(function(t){
+      var up = t.dl>=0;
+      var arrow = up ? "<path d=\"M12 19V5M5 12l7-7 7 7\"/>" : "<path d=\"M12 5v14M5 12l7 7 7-7\"/>";
+      return "<span class=\"t-item\" data-tooltip-ticker=\""+Utils.escapeHtml(t.p)+"\" tabindex=\"0\"><b>"+Utils.escapeHtml(t.p)+"</b>"+
+        "<span class=\"chip "+(up?"up":"dn")+"\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\">"+arrow+"</svg>"+Utils.fmtBRLk(Math.abs(t.dl))+"</span></span>";
+    }).join("");
+    var track = document.getElementById("tickerTrack");
+    track.innerHTML = html + html;
+  }
+  return {render:render};
+})();
+
+/* ============================== EXPORT ================================= */
+var ExportCsv = (function(){
+  function run(){
+    var list = Filters.sorted(Filters.currentFiltered());
+    var head = "Projeto;Empresa;Status;SaldoIncorrido;SaldoViabilidade;Delta;MargemLiquida";
+    var lines = list.map(function(p){
+      return [p.p, p.e, p.st, p.si.toFixed(2), p.sv.toFixed(2), p.dl.toFixed(2), Utils.percValue(p.ml).toFixed(2)].join(";");
+    });
+    var csv = head + "\n" + lines.join("\n");
+    var blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "projetos_viabilidade.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  return {run:run};
+})();
+
+/* ============================== MAIN ==================================== */
+var Main = (function(){
+  var rafPending = false;
+
+  function refresh(){
+    if(rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function(){
+      rafPending = false;
+      var filtered = Filters.sorted(Filters.currentFiltered());
+      Kpis.render(filtered);
+      Charts.donut(filtered);
+      Charts.bars(Filters.ranFiltered());
+      Table.render(filtered);
+    });
+  }
+
+  function bindTooltips(){
+    var kpiGrid = document.getElementById("kpiGrid");
+    Tooltip.bindDelegated(kpiGrid, "[data-tooltip-kpi]", function(el){
+      var id = el.getAttribute("data-tooltip-kpi");
+      var labels = {si:"Saldo Incorrido", sv:"Saldo Viabilidade", dl:"Delta", ct:"Projetos"};
+      return "<h3>"+labels[id]+"</h3><div class=\"tt-row\"><span>Baseado no filtro atual</span></div>";
+    });
+
+    var ticker = document.getElementById("tickerTrack");
+    Tooltip.bindDelegated(ticker, "[data-tooltip-ticker]", function(el){
+      var name = el.getAttribute("data-tooltip-ticker");
+      var proj = PRJ.filter(function(p){ return p.p===name; })[0];
+      if(!proj) return "";
+      return "<h3>"+Utils.escapeHtml(proj.p)+"</h3>"+
+        "<div class=\"tt-row\"><span>Empresa</span><b>"+Utils.escapeHtml(proj.e)+"</b></div>"+
+        "<div class=\"tt-row\"><span>Saldo Incorrido</span><b>"+Utils.fmtBRL(proj.si)+"</b></div>"+
+        "<div class=\"tt-row\"><span>Saldo Viabilidade</span><b>"+Utils.fmtBRL(proj.sv)+"</b></div>"+
+        "<div class=\"tt-row\"><span>Delta</span><b>"+Utils.fmtBRL(proj.dl)+"</b></div>";
+    });
+
+    var donutLegend = document.getElementById("donutLegend");
+    Tooltip.bindDelegated(donutLegend, "[data-tooltip-status]", function(el){
+      var st = el.getAttribute("data-tooltip-status");
+      var list = Filters.currentFiltered().filter(function(p){ return p.st===st; });
+      return "<h3>Status: "+st+"</h3><div class=\"tt-row\"><span>Projetos</span><b>"+list.length+"</b></div>";
+    });
+
+    var barsSvg = document.getElementById("barsSvg");
+    Tooltip.bindDelegated(barsSvg, "[data-tooltip-bar]", function(el){
+      var idx = parseInt(el.getAttribute("data-tooltip-bar"),10);
+      var ran = Filters.ranFiltered();
+      var r = ran[idx];
+      if(!r) return "";
+      var ym = Utils.parseYM(r.d);
+      var val = r.real!==0 ? r.real : r.proj;
+      var tipo = r.real!==0 ? "Realizado" : "Projetado";
+      return "<h3>"+Utils.monthLabel(ym)+"</h3>"+
+        "<div class=\"tt-row\"><span>"+tipo+"</span><b>"+Utils.fmtBRL(val)+"</b></div>";
+    });
+
+    var tbody = document.getElementById("tblBody");
+    Tooltip.bindDelegated(tbody, "tr[data-tooltip-row]", function(el){
+      var name = el.getAttribute("data-p");
+      var proj = PRJ.filter(function(p){ return p.p===name; })[0];
+      if(!proj) return "";
+      return "<h3>"+Utils.escapeHtml(proj.p)+"</h3>"+
+        "<div class=\"tt-row\"><span>Empresa</span><b>"+Utils.escapeHtml(proj.e)+"</b></div>"+
+        "<div class=\"tt-row\"><span>Status</span><b>"+proj.st+"</b></div>"+
+        "<div class=\"tt-row\"><span>Margem L\u00edquida</span><b>"+Utils.fmtPct(proj.ml)+"</b></div>";
+    });
+
+    var header = document.querySelector(".header-right");
+    Tooltip.bindDelegated(header, "[data-tooltip-generic]", function(el){
+      var title = el.getAttribute("data-tt-title");
+      var text = el.getAttribute("data-tt-text");
+      return "<h3>"+Utils.escapeHtml(title)+"</h3><div class=\"tt-row\"><span>"+Utils.escapeHtml(text)+"</span></div>";
+    });
+  }
+
+  function bindFilters(){
+    document.getElementById("globalSearch").addEventListener("input", Utils.debounce(function(e){
+      Filters.state.q = e.target.value; Filters.apply();
+    }, 140));
+    document.getElementById("btnReset").addEventListener("click", Filters.reset);
+    document.getElementById("btnExport").addEventListener("click", ExportCsv.run);
+    document.getElementById("themeToggle").addEventListener("click", Theme.toggle);
+  }
+
+  function setLastUpdate(){
+    var maxDate = null;
+    RAN.forEach(function(r){
+      if(r.real!==0){
+        var p = r.d.split("/");
+        var d = new Date(parseInt(p[2],10), parseInt(p[1],10)-1, 1);
+        if(!maxDate || d>maxDate) maxDate=d;
+      }
+    });
+    var el = document.getElementById("lastUpdate");
+    if(maxDate){
+      var meses=["janeiro","fevereiro","mar\u00e7o","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+      el.textContent = "Base: "+meses[maxDate.getMonth()]+"/"+maxDate.getFullYear();
+    }
+  }
+
+  function init(){
+    Theme.init();
+    Charts.refreshTheme();
+    Filters.populateSelects();
+    Table.bindEvents();
+    bindFilters();
+    bindTooltips();
+    setLastUpdate();
+    Ticker.render();
+    refresh();
+  }
+
+  return {init:init, refresh:refresh};
+})();
+
+Main.init();
+
+})();
+
+</script>
+</body>
+</html>
